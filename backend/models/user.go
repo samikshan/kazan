@@ -1,10 +1,17 @@
 package models
 
 import (
+	"context"
+
 	"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
+	"github.com/multiformats/go-multiaddr"
 	log "github.com/sirupsen/logrus"
+	pow "github.com/textileio/powergate/api/client"
 	"golang.org/x/crypto/bcrypt"
+	"google.golang.org/grpc"
+
+	"github.com/samikshan/kazan/backend"
 )
 
 type User struct {
@@ -18,7 +25,8 @@ type User struct {
 
 type UserRepo interface {
 	Create(u *User) error
-	GetByUserID(id uint) (*User, error)
+	Update(u *User) error
+	GetByID(id uint) (*User, error)
 	GetByEmail(email string) (*User, error)
 }
 
@@ -42,4 +50,30 @@ func (u *User) HashPassword(plain string) error {
 func (u *User) CheckPassword(plain string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(plain))
 	return err == nil
+}
+
+func (u *User) FFSCreate() (string, string, error) {
+	ma, err := multiaddr.NewMultiaddr(backend.Cfg.PowGrpcHost)
+	if err != nil {
+		log.WithError(err).Error("error parsing multiaddress")
+		return "", "", err
+	}
+	client, err := pow.NewClient(ma, grpc.WithInsecure())
+	if err != nil {
+		log.WithError(err).Error("failed to create powergate client")
+		return "", "", err
+	}
+
+	ffsID, ffsToken, err := client.FFS.Create(context.Background())
+	if err != nil {
+		log.WithError(err).Error("failed to create powergate ffs instance")
+		return "", "", err
+	}
+
+	err = client.Close()
+	if err != nil {
+		log.WithError(err).Error("failed to close powergate client")
+	}
+
+	return ffsID, ffsToken, nil
 }

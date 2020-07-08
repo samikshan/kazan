@@ -1,6 +1,7 @@
 httpPort = 1323
 logLevel = "debug"
 powHost = "http://127.0.0.1:6002"
+powGrpcHost = "/ip4/0.0.0.0/tcp/5002"
 
 [jwt]
 signingKey = "secretKey"

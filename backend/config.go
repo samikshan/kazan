@@ -14,10 +14,11 @@ const (
 )
 
 type Constants struct {
-	HTTPPort uint64
-	LogLevel string
-	POWHost  string
-	Postgres struct {
+	HTTPPort    uint64
+	LogLevel    string
+	PowHost     string
+	PowGrpcHost string
+	Postgres    struct {
 		Type     string
 		Host     string
 		Port     uint16

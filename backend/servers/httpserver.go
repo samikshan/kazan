@@ -33,4 +33,6 @@ func NewHTTPSv() *HttpServer {
 
 func (sv *HttpServer) setupRoutes() {
 	sv.E.POST("/signup", sv.H.Signup)
+	sv.E.POST("/login", sv.H.Login)
+	sv.E.POST("/token", sv.H.Token)
 }
