@@ -1,0 +1,14 @@
+httpPort = 1323
+logLevel = "debug"
+powHost = "http://127.0.0.1:6002"
+
+[jwt]
+signingKey = "secretKey"
+
+[postgres]
+type = "tcp"
+host = "127.0.0.1"
+port = 5432
+user = ""
+password = ""
+database = ""
