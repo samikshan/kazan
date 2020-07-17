@@ -1,7 +1,7 @@
 import store from "@/store";
 import { VuexModule, Module, Mutation, Action, getModule, MutationAction } from 'vuex-module-decorators'
 import { User, Profile } from '../models';
-import { getIdentity } from '../api';
+import { getStoredIdentity, createIdentity } from '../api';
 
 @Module({
   namespaced: true,
@@ -14,19 +14,23 @@ class UsersModule extends VuexModule {
   profile: Profile | null = null
 
   get userIdentity() {
-    return this.user && this.user.identity || null;
+    if (this.user) {
+      return this.user.identity;
+    }
+
+    return getStoredIdentity();
   }
 
   @Mutation
   setUser(user: User) { this.user = user }
 
-  @Action
+  @Action({commit: 'setUser'})
   async login() {
-    const identity = await getIdentity();
+    const identity = await createIdentity();
     const user: User = {
       identity: identity
     }
-    
+
     return user
   }
 }
