@@ -1,14 +1,18 @@
 import { Identity } from "@textile/threads-core";
 
-export interface Profile {
-  id: number
+export interface User {
   username: string
-  fullName?: string
-  image?: string
+  walletAddr: string
+  email?: string
 }
 
-export interface User {
-  identity: Identity 
+export interface UserCreate {
+  username: string;
+  password: string;
+}
+
+export interface UserCreateResponse {
+  user: User
 }
 
 export interface Track {

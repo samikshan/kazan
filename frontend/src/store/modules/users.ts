@@ -1,7 +1,7 @@
 import store from "@/store";
 import { VuexModule, Module, Mutation, Action, getModule, MutationAction } from 'vuex-module-decorators'
-import { User, Profile } from '../models';
-import { getStoredIdentity, createIdentity } from '../api';
+import { User, UserCreate } from '../models';
+import { getStoredIdentity, createIdentity, createUser, hedgehog } from '../api';
 
 @Module({
   namespaced: true,
@@ -10,25 +10,24 @@ import { getStoredIdentity, createIdentity } from '../api';
   store: store
 })
 class UsersModule extends VuexModule {
-  user: User | null = null
-  profile: Profile | null = null
+  user: User | null = null;
 
-  get userIdentity() {
-    if (this.user) {
-      return this.user.identity;
-    }
-
-    return getStoredIdentity();
+  get username() {
+    // if (this.user) {
+    //   return this.user.identity;
+    // }
+    return this.user && this.user.username || null;
   }
 
   @Mutation
   setUser(user: User) { this.user = user }
 
   @Action({commit: 'setUser'})
-  async login() {
-    const identity = await createIdentity();
+  async signup(userCreateReq: UserCreate) {
+    await createUser(userCreateReq);
     const user: User = {
-      identity: identity
+      username: userCreateReq.username,
+      walletAddr: hedgehog.getWallet()
     }
 
     return user
