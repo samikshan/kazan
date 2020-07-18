@@ -1,11 +1,11 @@
 <template>
   <div class="form">
     <div class="fields">
-      <input v-model="username" placeholder="Username">
-      <input v-model="password" placeholder="Password" type="password">
+      <input class="[ errorMessage ? error : null ]" v-model="username" placeholder="Username">
+      <input class="[ errorMessage ? error : null ]" v-model="password" placeholder="Password" type="password">
       <div>
-        <input v-model="passwordConfirmation" placeholder="Confirm Password" type="password">
-        <!-- <p className="error">{{ errorMessage }}</p> -->
+        <input class="[ errorMessage ? error : null ]" v-model="passwordConfirmation" placeholder="Confirm Password" type="password">
+        <p className="error">{{ errorMessage }}</p>
       </div>
     </div>
     <div className="buttons">
@@ -27,23 +27,18 @@ export default class Signup extends Vue {
   errorMessage = ""
 
   async handleSignup() {
-    console.log("Signup request!");
     console.log(this.username, this.password);
     if (this.password !== this.passwordConfirmation) {
-      console.log("passwords dont match");
       this.errorMessage = "The passwords you entered don't match"
     } else if (!this.username || !this.password || !this.passwordConfirmation) {
-      console.log("incomplete fields");
-      console.log(this.username, this.password);
       this.errorMessage = "Please enter the required fields"
     } else {
       this.errorMessage = ""
       try {
-        const user = await users.signup({
+        await users.signup({
           username: this.username,
           password: this.password
         })
-        console.log(user);
       } catch(e) {
         console.error(e);
         this.errorMessage = "Account already exists. Try logging in instead"

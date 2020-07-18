@@ -13,10 +13,11 @@ class UsersModule extends VuexModule {
   user: User | null = null;
 
   get username() {
-    // if (this.user) {
-    //   return this.user.identity;
-    // }
     return this.user && this.user.username || null;
+  }
+
+  get isLoggedIn() {
+    return hedgehog.isLoggedIn()
   }
 
   @Mutation

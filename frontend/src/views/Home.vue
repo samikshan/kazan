@@ -1,7 +1,7 @@
 <template>
   <div class="home">
     <!-- <CreateProfile v-if="!username"/> -->
-    <AuthTabs v-if="!username" />
+    <AuthTabs v-if="!isLoggedIn" />
   </div>
 </template>
 
@@ -17,9 +17,13 @@ import { Component, Vue } from "vue-property-decorator";
   }
 })
 export default class Home extends Vue {
-  get username() {
-    return users.username;
+  get isLoggedIn() {
+    return users.isLoggedIn
   }
+
+  // get username() {
+  //   return users.username;
+  // }
 }
 
 </script>
