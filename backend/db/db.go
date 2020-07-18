@@ -38,5 +38,6 @@ func AutoMigrate(db *gorm.DB) {
 	log.Info("migrate shit")
 	db.AutoMigrate(
 		&models.User{},
+		&models.Auth{},
 	)
 }

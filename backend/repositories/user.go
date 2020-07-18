@@ -23,9 +23,9 @@ func (repo *UserRepo) Update(u *models.User) error {
 	return repo.db.Save(u).Error
 }
 
-func (repo *UserRepo) GetByEmail(email string) (*models.User, error) {
+func (repo *UserRepo) GetByUsername(username string) (*models.User, error) {
 	var u models.User
-	if err := repo.db.Where(&models.User{Email: email}).First(&u).Error; err != nil {
+	if err := repo.db.Where(&models.User{Username: username}).First(&u).Error; err != nil {
 		if gorm.IsRecordNotFoundError(err) {
 			return nil, nil
 		}
