@@ -4,7 +4,10 @@
     <AuthTabs v-if="!isLoggedIn" />
     <div v-else>
       <p v-if="!bucketKey">Buckets not setup</p>
-      <p v-else>Buckets set up! Can upload stuff to Textile now</p>
+      <div v-else>
+        <p>Buckets set up! Can upload stuff to Textile now</p>
+        <Recorder />
+      </div>
     </div>
   </div>
 </template>
@@ -12,12 +15,14 @@
 <script lang="ts">
 // @ is an alias to /src
 import AuthTabs from "@/components/AuthTabs.vue";
+import Recorder from "@/components/Recorder.vue";
 import users from "@/store/modules/users";
 import { Component, Vue } from "vue-property-decorator";
 
 @Component({
   components: {
-    AuthTabs
+    AuthTabs,
+    Recorder,
   }
 })
 export default class Home extends Vue {

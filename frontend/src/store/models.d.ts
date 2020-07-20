@@ -23,4 +23,5 @@ export interface RecordedTrack {
   id: number
   localURL: string
   data: Blob
+  name: string
 }
