@@ -16,7 +16,7 @@ class UsersModule extends VuexModule {
   user: User | null = null;
   threadsClient?: Client
   buckets?: Buckets
-  bucketKey?: string
+  bucketKey = ""
 
   get username() {
     return this.user && this.user.username || null;
