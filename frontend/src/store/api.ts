@@ -1,4 +1,4 @@
-import { Libp2pCryptoIdentity } from "@textile/threads-core";
+import { Buckets, Identity, KeyInfo, Client} from '@textile/hub';
 import { Hedgehog } from "@audius/hedgehog";
 import axios from "axios";
 import { UserCreate } from "@/store/models";
@@ -44,31 +44,38 @@ const getFn = async (obj: any) => {
 
 export const hedgehog = new Hedgehog(getFn, setAuthFn, setUserFn);
 
-export function getStoredIdentity(): Promise<Libp2pCryptoIdentity> {
-  try {
-		const storedIdent = localStorage.getItem("identity")
-		if (storedIdent === null) {
-			throw new Error('No identity')
-		}
-		const restored = Libp2pCryptoIdentity.fromString(storedIdent)
-		return restored
-	} catch (e) {
-    return e.message;
-  }
-}
-
-export async function createIdentity(): Promise<Libp2pCryptoIdentity> {
-	try {
-    const identity = await Libp2pCryptoIdentity.fromRandom()
-    const identityString = identity.toString()
-    localStorage.setItem("identity", identityString)
-    return identity
-  } catch (err) {
-    return err.message
-  }
-}
-
 export async function createUser(user: UserCreate) {
   const wallet = await hedgehog.signUp(user.username, user.password);
   console.log(wallet);
+}
+
+// textile stuff
+
+const keyinfo = {
+  key: "bfn2ssz72cgn6cgtuayqwnenvgi",
+  secret: "",
+  type: 1
+}
+
+export async function createThreadsClient(identity: Identity) {
+  const client = await Client.withKeyInfo(keyinfo);
+  const token = await client.getToken(identity);
+  console.log(token)
+  return client;
+}
+
+export async function createBucketsClient(identity: Identity) {
+  const buckets = await Buckets.withKeyInfo(keyinfo);
+  console.log(buckets)
+  const token = await buckets.getToken(identity);
+  return buckets;
+}
+
+export async function createBucket(buckets: Buckets, name: string) {
+  const root = await buckets.open(name)
+  if (!root) {
+    throw new Error('Failed to open bucket')
+  }
+
+  return root.key
 }

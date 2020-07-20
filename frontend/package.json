@@ -11,8 +11,8 @@
   },
   "dependencies": {
     "@audius/hedgehog": "^1.0.8",
-    "@textile/hub": "^0.3.3",
-    "@textile/threads-core": "^0.1.30",
+    "@textile/hub": "^0.4.0",
+    "@textile/threads-core": "^0.1.32",
     "axios": "^0.19.2",
     "core-js": "^3.6.5",
     "register-service-worker": "^1.7.1",
