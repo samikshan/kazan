@@ -1,7 +1,7 @@
-import { Buckets, Identity, KeyInfo, Client} from '@textile/hub';
+import { Buckets, Identity, KeyInfo, Client, PushPathResult } from '@textile/hub';
 import { Hedgehog } from "@audius/hedgehog";
 import axios from "axios";
-import { UserCreate } from "@/store/models";
+import { UserCreate, RecordedTrack } from "@/store/models";
 
 const requestToServer = async (axiosRequestObj: any) => {
   axiosRequestObj.baseURL = 'http://localhost:1323/'
@@ -78,4 +78,19 @@ export async function createBucket(buckets: Buckets, name: string) {
   }
 
   return root.key
+}
+
+export async function pushToBucket(track: RecordedTrack, bucketKey: string, buckets: Buckets): Promise<PushPathResult> {
+  return new Promise((resolve, reject) => {
+    try {
+      const data = track.data;
+      data.arrayBuffer().then(audioBuffer => {
+        buckets.pushPath(bucketKey, "/tracks", audioBuffer).then((raw) => {
+          resolve(raw);
+        })
+      });
+    } catch(e) {
+      reject(e);
+    }
+  });
 }

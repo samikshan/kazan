@@ -7,6 +7,7 @@
       <div v-else>
         <p>Buckets set up! Can upload stuff to Textile now</p>
         <Recorder />
+        <Profile />
       </div>
     </div>
   </div>
@@ -16,6 +17,7 @@
 // @ is an alias to /src
 import AuthTabs from "@/components/AuthTabs.vue";
 import Recorder from "@/components/Recorder.vue";
+import Profile from "@/components/Profile.vue";
 import users from "@/store/modules/users";
 import { Component, Vue } from "vue-property-decorator";
 
@@ -23,6 +25,7 @@ import { Component, Vue } from "vue-property-decorator";
   components: {
     AuthTabs,
     Recorder,
+    Profile,
   }
 })
 export default class Home extends Vue {
@@ -43,10 +46,6 @@ export default class Home extends Vue {
   get bucketKey() {
     return users.userBucketKey
   }
-
-  // get username() {
-  //   return users.username;
-  // }
 }
 
 </script>

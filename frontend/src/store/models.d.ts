@@ -17,6 +17,8 @@ export interface UserCreateResponse {
 
 export interface Track {
   cid: string
+  name: string
+  path: string
 }
 
 export interface RecordedTrack {

@@ -1,9 +1,10 @@
 import store from "@/store";
 import { VuexModule, Module, Mutation, Action, getModule, MutationAction } from 'vuex-module-decorators'
-import { User, UserCreate } from '../models';
-import { createUser, hedgehog, createThreadsClient, createBucketsClient, createBucket } from '../api';
-import { HedgehogIdentity } from '../identity';
+import { User, UserCreate, Track, RecordedTrack } from '@/store/models';
+import { createUser, hedgehog, createThreadsClient, createBucketsClient, createBucket, pushToBucket } from '@/store/api';
+import { HedgehogIdentity } from '@/store/identity';
 import { keys } from 'libp2p-crypto';
+import { Buckets } from '@textile/hub';
 
 @Module({
   namespaced: true,
@@ -13,7 +14,9 @@ import { keys } from 'libp2p-crypto';
 })
 class UsersModule extends VuexModule {
   user: User | null = null;
+  buckets: Buckets | null = null;
   bucketKey = ""
+  tracks: Array<Track> = []
 
   get username() {
     return this.user && this.user.username || null;
@@ -28,6 +31,10 @@ class UsersModule extends VuexModule {
   get userBucketKey() {
     console.log(this.bucketKey)
     return this.bucketKey
+  }
+
+  get getTracks() {
+    return this.tracks
   }
 
   @Mutation
@@ -48,7 +55,10 @@ class UsersModule extends VuexModule {
   @Mutation
   setBucketKey(bucketKey: string) { this.bucketKey = bucketKey }
 
-  @Action({commit: 'setBucketKey'})
+  @Mutation
+  setBuckets(buckets: Buckets) { this.buckets = buckets }
+
+  @Action
   async setupUser() {
     try {
       const wallet = hedgehog.getWallet()
@@ -59,10 +69,29 @@ class UsersModule extends VuexModule {
       const bucketsClient = await createBucketsClient(identity);
       const bucketKey = await createBucket(bucketsClient, "kazan-test-bucket")
 
-      return bucketKey
+      this.context.commit('setBucketKey', bucketKey)
+      this.context.commit('setBuckets', bucketsClient)
     } catch (e) {
       console.error(e);
     }
+  }
+
+  @Mutation
+  updateTracks(track: Track) { this.tracks.push(track) }
+
+  @Action({commit: 'updateTracks'})
+  async addNewTrack(recordedTrack: RecordedTrack) {
+    console.log("about to push new track to bucket")
+    if (!this.buckets) {
+      throw new Error("bucket client not yet initialised");
+    }
+    const raw = await pushToBucket(recordedTrack, this.bucketKey, this.buckets);
+    const track: Track = {
+      cid: raw.path.cid.toString(),
+      name: recordedTrack.name,
+      path: raw.path.path
+    }
+    return track
   }
 }
 

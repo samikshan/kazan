@@ -20,8 +20,11 @@
           controls
           v-bind:src="r.localURL"
         ></audio>
+        <div id="buttons">
+          <button v-bind:id="r.id" v-on:click="handleUploadRecording">Publish</button>
+          <button v-bind:id="r.id" v-on:click="handleDeleteRecording">Delete</button>
+      </div>
       </li>
-        <!-- <button class="delete" id="{rec.id}" on:click={handleDeleteRecording}>Delete</button> -->
     </ul>
   </div>
 </template>
@@ -29,6 +32,7 @@
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
 import { RecordedTrack } from "@/store/models";
+import users from "@/store/modules/users";
 
 @Component
 export default class Recorder extends Vue {
@@ -101,9 +105,38 @@ export default class Recorder extends Vue {
     ];
   }
 
+  async handleUploadRecording(event: Event) {
+    const target = event.target as HTMLButtonElement;
+    console.log("upload request for recording id: ", target.id);
+    const recID: number = +target.id;
+    const recordedTrack = this.recordings[recID];
+    try {
+      await users.addNewTrack(recordedTrack);
+    } catch(e) {
+      console.error(e);
+    }
+    // recordedBlob.name = 'track_' + recID + '.wav';
+    // recordedBlob.lastModifiedDate = new Date();
+    // console.log(recordedBlob);
+    // const cid = await hotUpload(recordedBlob);
+    // const jobID = await coldUpload(cid);
+    // console.log(jobID);
+
+    // try {
+    //     const newTrackData = { title: "", cID: cid };
+    //     await postNewTrack(newTrackData);
+    // } catch (err) {
+    //     console.error("upload failed. Returned error: ", err);
+    //     await showAlert("Uploading new track failed!");
+    //     return;
+    // }
+    // var recordingID = target.id;
+    // this.recordings = this.recordings.filter(recording => recording.id != recordingID);
+  }
+
   handleDeleteRecording(event: Event) {
-    console.log(event);
-    // const target = event.target as HTMLButtonElement;
+    const target = event.target as HTMLButtonElement;
+    console.log("delete request for recording id: ", target.id);
     // var recordingID = target.id;
     // this.recordings = this.recordings.filter(recording => recording.id != recordingID);
   }
