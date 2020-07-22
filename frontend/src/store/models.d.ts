@@ -15,10 +15,34 @@ export interface UserCreateResponse {
   user: User
 }
 
-export interface Track {
+export interface UploadTrackResponse {
   cid: string
+  metapath: string
   name: string
+}
+
+export interface TrackUploadedData {
+  name: string
+  cid: string
   path: string
+}
+
+export interface TrackData {
+  name: string
+  date: number
+  metadata: TrackUploadedData
+}
+
+export interface Track {
+  name: string
+  cid: string
+  src: string
+}
+
+export interface UserTrackIndex {
+  owner: string
+  date: number
+  paths: string[]
 }
 
 export interface RecordedTrack {

@@ -5,10 +5,10 @@
     <ul class="tracks-list">
       <li v-for="track in tracks" v-bind:key="track.cid">
         {{ track.name }} : {{ track.cid }}
-        <!-- <audio -->
-          <!-- controls -->
-          <!-- v-bind:src="r.localURL" -->
-        <!-- ></audio> -->
+        <audio
+          controls
+          v-bind:src="track.src"
+        ></audio>
       </li>
     </ul>
   </div>

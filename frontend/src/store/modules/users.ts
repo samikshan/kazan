@@ -1,7 +1,7 @@
 import store from "@/store";
-import { VuexModule, Module, Mutation, Action, getModule, MutationAction } from 'vuex-module-decorators'
-import { User, UserCreate, Track, RecordedTrack } from '@/store/models';
-import { createUser, hedgehog, createThreadsClient, createBucketsClient, createBucket, pushToBucket } from '@/store/api';
+import { VuexModule, Module, Mutation, Action, getModule } from 'vuex-module-decorators'
+import { User, UserCreate, Track, RecordedTrack, UserTrackIndex } from '@/store/models';
+import { createUser, hedgehog, createBucketsClient, createBucket, getTrackIndex, uploadTrackToBucket, getTracks, storeIndex } from '@/store/api';
 import { HedgehogIdentity } from '@/store/identity';
 import { keys } from 'libp2p-crypto';
 import { Buckets } from '@textile/hub';
@@ -16,6 +16,7 @@ class UsersModule extends VuexModule {
   user: User | null = null;
   buckets: Buckets | null = null;
   bucketKey = ""
+  trackIndex: UserTrackIndex | null = null 
   tracks: Array<Track> = []
 
   get username() {
@@ -58,6 +59,12 @@ class UsersModule extends VuexModule {
   @Mutation
   setBuckets(buckets: Buckets) { this.buckets = buckets }
 
+  @Mutation
+  setTrackIndex(trackIndex: UserTrackIndex) { this.trackIndex = trackIndex }
+
+  @Mutation
+  setTracks(tracks: Track[]) { this.tracks = tracks }
+
   @Action
   async setupUser() {
     try {
@@ -67,10 +74,15 @@ class UsersModule extends VuexModule {
       const identity: HedgehogIdentity = new HedgehogIdentity(key);
 
       const bucketsClient = await createBucketsClient(identity);
-      const bucketKey = await createBucket(bucketsClient, "kazan-test-bucket")
-
+      const bucketKey = await createBucket(bucketsClient, "kazan-test-bucket");
+      const trackIndex = await getTrackIndex(bucketsClient, bucketKey, identity)
+      console.log(trackIndex)
+      const tracks = await getTracks(bucketsClient, bucketKey, trackIndex)
+      console.log(tracks)
       this.context.commit('setBucketKey', bucketKey)
       this.context.commit('setBuckets', bucketsClient)
+      this.context.commit('setTrackIndex', trackIndex)
+      this.context.commit('setTracks', tracks)
     } catch (e) {
       console.error(e);
     }
@@ -79,19 +91,37 @@ class UsersModule extends VuexModule {
   @Mutation
   updateTracks(track: Track) { this.tracks.push(track) }
 
-  @Action({commit: 'updateTracks'})
+  @Mutation
+  async updateTrackIndex(path: string) {
+    if (!this.trackIndex || !this.buckets) {
+      throw new Error("track index or buckets is undefined");
+    }
+    this.trackIndex.paths.push(path)
+    await storeIndex(this.trackIndex, this.buckets, this.bucketKey)
+  }
+
+  @Action
   async addNewTrack(recordedTrack: RecordedTrack) {
     console.log("about to push new track to bucket")
     if (!this.buckets) {
       throw new Error("bucket client not yet initialised");
     }
-    const raw = await pushToBucket(recordedTrack, this.bucketKey, this.buckets);
-    const track: Track = {
-      cid: raw.path.cid.toString(),
-      name: recordedTrack.name,
-      path: raw.path.path
+
+    if (!this.trackIndex) {
+      throw new Error("track index not yet created for user");
     }
-    return track
+    try {
+      const resp = await uploadTrackToBucket(recordedTrack, this.bucketKey, this.buckets)
+      const track: Track = {
+        src: `https://${resp.cid}.ipfs.hub.textile.io`,
+        name: resp.name,
+        cid: resp.cid
+      }
+      this.context.commit("updateTrackIndex", resp.metapath)
+      this.context.commit("updateTracks", track)
+    } catch(err) {
+      console.error(err)
+    }
   }
 }
 
