@@ -39,5 +39,7 @@ func AutoMigrate(db *gorm.DB) {
 	db.AutoMigrate(
 		&models.User{},
 		&models.Auth{},
+		&models.Track{},
+		&models.Component{},
 	)
 }
