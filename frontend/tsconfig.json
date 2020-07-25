@@ -14,7 +14,12 @@
     "types": [
       "webpack-env",
       "jest",
-      "dom-mediacapture-record"
+      "dom-mediacapture-record",
+      "vuetify"
+    ],
+    "typeRoots": [
+      "./node_modules/@types",
+      "./node_modules/vuetify/types"
     ],
     "paths": {
       "@/*": [

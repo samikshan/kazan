@@ -1,1 +1,1 @@
-declare module '@audius/hedgehog';
+declare module "@audius/hedgehog";

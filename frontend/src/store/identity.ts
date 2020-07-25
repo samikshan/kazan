@@ -1,26 +1,26 @@
-import { keys, PrivateKey, PublicKey } from "@textile/threads-crypto"
-import multibase from "multibase"
+import { keys, PrivateKey, PublicKey } from "@textile/threads-crypto";
+import multibase from "multibase";
 
 export function publicKeyToString(key: PublicKey): string {
   return multibase
     .encode("base32", keys.marshalPublicKey(key) as Buffer)
-    .toString()
+    .toString();
 }
 
 export function privateKeyToString(key: PrivateKey): string {
   return multibase
     .encode("base32", keys.marshalPrivateKey(key) as Buffer)
-    .toString()
+    .toString();
 }
 
 export function privateKeyFromString(str: string): Promise<PrivateKey> {
-  return keys.unmarshalPrivateKey(multibase.decode(str))
+  return keys.unmarshalPrivateKey(multibase.decode(str));
 }
 
 export interface Public {
-  verify(data: Uint8Array, sig: Uint8Array): Promise<boolean>
-  toString(): string
-  bytes: Uint8Array
+  verify(data: Uint8Array, sig: Uint8Array): Promise<boolean>;
+  toString(): string;
+  bytes: Uint8Array;
 }
 
 /**
@@ -30,8 +30,8 @@ export interface Public {
  * The interface is currently modeled after @textile/threads-crypto PrivateKeys.
  */
 export interface Identity {
-  sign(data: Uint8Array): Promise<Uint8Array>
-  public: Public
+  sign(data: Uint8Array): Promise<Uint8Array>;
+  public: Public;
 }
 
 export class HedgehogPublicKey implements Public {
@@ -43,29 +43,29 @@ export class HedgehogPublicKey implements Public {
    * @param sig The signature to verify.
    */
   verify(data: Uint8Array, sig: Uint8Array): Promise<boolean> {
-    return this.key.verify(data, sig)
+    return this.key.verify(data, sig);
   }
 
   /**
    * Returns base32 encoded Public key representation.
    */
   toString(): string {
-    return publicKeyToString(this.key)
+    return publicKeyToString(this.key);
   }
 
   /**
    * The raw bytes of the Public key.
    */
   get bytes(): Uint8Array {
-    return this.key.bytes
+    return this.key.bytes;
   }
 }
 
 export class HedgehogIdentity implements Identity {
-  key: PrivateKey
+  key: PrivateKey;
   constructor(key: PrivateKey) {
     // const ed25519key = await unmarshalEd25519PrivateKey(bytes)
-    this.key = key
+    this.key = key;
   }
 
   /**
@@ -73,21 +73,21 @@ export class HedgehogIdentity implements Identity {
    * @param data Data to be signed.
    */
   sign(data: Uint8Array): Promise<Uint8Array> {
-    return this.key.sign(data)
+    return this.key.sign(data);
   }
 
   /**
    * Returns the Public key.
    */
   get public(): HedgehogPublicKey {
-    console.log(this.key.public)
-    return new HedgehogPublicKey(this.key.public)
+    console.log(this.key.public);
+    return new HedgehogPublicKey(this.key.public);
   }
 
   /**
    * Returns base32 encoded private key representation.
    */
   toString(): string {
-    return privateKeyToString(this.key)
+    return privateKeyToString(this.key);
   }
 }
