@@ -1,45 +1,40 @@
 <template>
-  <div class="record-upload-track">
-    <section class="main-controls">
-      <canvas class="visualizer" height="60px"></canvas>
-
-      <div id="buttons">
-        <button
-          class="record-start"
-          id="startRecording"
-          v-on:click="handleStartRecording"
-        >
-          Start recording
-        </button>
-        <button
-          class="record-stop"
-          id="stopRecording"
-          v-on:click="handleStopRecording"
-        >
-          Stop recording
-        </button>
-      </div>
-    </section>
-
-    <hr />
-
-    <h2>Recordings</h2>
-
-    <ul class="audio-rec-list">
-      <li v-for="r in recordings" v-bind:key="r.id">
-        <p>{{ r.name }}</p>
-        <audio controls v-bind:src="r.localURL"></audio>
+  <v-app>
+    <v-card class="mx-auto mt-5" max-width="600px" min-width="360px">
+      <v-card-actions elevation=24>
         <div id="buttons">
-          <button v-bind:id="r.id" v-on:click="handleUploadRecording">
-            Publish
-          </button>
-          <button v-bind:id="r.id" v-on:click="handleDeleteRecording">
-            Delete
-          </button>
+          <v-btn @click="handleStartRecording">
+            <v-icon color="teal lighten-1">{{ isRecording ? 'mdi-pause' : 'mdi-microphone' }}</v-icon>
+          </v-btn>
+          <v-btn @click="handleStopRecording">
+            <v-icon color="red">mdi-stop</v-icon>
+          </v-btn>
         </div>
-      </li>
-    </ul>
-  </div>
+      </v-card-actions>
+
+      <v-card class="mx-auto">
+        <v-card-title>
+          <h2 class="display-1">Recorded tracks</h2>
+        </v-card-title>
+        <v-card>
+          <ul class="audio-rec-list">
+            <li v-for="r in recordings" v-bind:key="r.id">
+              <p>{{ r.name }}</p>
+              <audio controls v-bind:src="r.localURL"></audio>
+              <div id="buttons">
+                <button v-bind:id="r.id" v-on:click="handleUploadRecording">
+                  Publish
+                </button>
+                <button v-bind:id="r.id" v-on:click="handleDeleteRecording">
+                  Delete
+                </button>
+              </div>
+            </li>
+          </ul>
+        </v-card>
+      </v-card>
+    </v-card>
+  </v-app>
 </template>
 
 <script lang="ts">
@@ -49,6 +44,7 @@ import users from "@/store/modules/users";
 
 @Component
 export default class Recorder extends Vue {
+  isRecording = false;
   recordings: Array<RecordedTrack> = [];
   mediaRecorder!: MediaRecorder;
   chunks: Array<any> = [];
@@ -74,12 +70,12 @@ export default class Recorder extends Vue {
   }
 
   handleStartRecording(event: Event) {
-    const target = event.target as HTMLButtonElement;
-    target.disabled = true;
-    const stopRecording = document.querySelector(
-      ".record-stop"
-    ) as HTMLButtonElement;
-    stopRecording.disabled = false;
+    // const target = event.target as HTMLButtonElement;
+    // target.disabled = true;
+    // const stopRecording = document.querySelector(
+      // ".record-stop"
+    // ) as HTMLButtonElement;
+    // stopRecording.disabled = false;
     console.log(this.mediaRecorder);
     this.mediaRecorder.start();
     console.log(this.mediaRecorder.state);
@@ -88,12 +84,12 @@ export default class Recorder extends Vue {
 
   handleStopRecording(event: Event) {
     console.log(this.mediaRecorder.state);
-    const startRecording = document.querySelector(
-      ".record-start"
-    ) as HTMLButtonElement;
-    startRecording.disabled = false;
-    const target = event.target as HTMLButtonElement;
-    target.disabled = true;
+    // const startRecording = document.querySelector(
+      // ".record-start"
+    // ) as HTMLButtonElement;
+    // startRecording.disabled = false;
+    // const target = event.target as HTMLButtonElement;
+    // target.disabled = true;
     this.mediaRecorder.stop();
     console.log(this.mediaRecorder.state);
     console.log("recording stopped");
