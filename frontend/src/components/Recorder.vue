@@ -70,12 +70,6 @@ export default class Recorder extends Vue {
   }
 
   handleStartRecording(event: Event) {
-    // const target = event.target as HTMLButtonElement;
-    // target.disabled = true;
-    // const stopRecording = document.querySelector(
-      // ".record-stop"
-    // ) as HTMLButtonElement;
-    // stopRecording.disabled = false;
     console.log(this.mediaRecorder);
     this.mediaRecorder.start();
     console.log(this.mediaRecorder.state);
@@ -84,12 +78,6 @@ export default class Recorder extends Vue {
 
   handleStopRecording(event: Event) {
     console.log(this.mediaRecorder.state);
-    // const startRecording = document.querySelector(
-      // ".record-start"
-    // ) as HTMLButtonElement;
-    // startRecording.disabled = false;
-    // const target = event.target as HTMLButtonElement;
-    // target.disabled = true;
     this.mediaRecorder.stop();
     console.log(this.mediaRecorder.state);
     console.log("recording stopped");
@@ -134,30 +122,11 @@ export default class Recorder extends Vue {
     } catch (e) {
       console.error(e);
     }
-    // recordedBlob.name = 'track_' + recID + '.wav';
-    // recordedBlob.lastModifiedDate = new Date();
-    // console.log(recordedBlob);
-    // const cid = await hotUpload(recordedBlob);
-    // const jobID = await coldUpload(cid);
-    // console.log(jobID);
-
-    // try {
-    //     const newTrackData = { title: "", cID: cid };
-    //     await postNewTrack(newTrackData);
-    // } catch (err) {
-    //     console.error("upload failed. Returned error: ", err);
-    //     await showAlert("Uploading new track failed!");
-    //     return;
-    // }
-    // var recordingID = target.id;
-    // this.recordings = this.recordings.filter(recording => recording.id != recordingID);
   }
 
   handleDeleteRecording(event: Event) {
     const target = event.target as HTMLButtonElement;
     console.log("delete request for recording id: ", target.id);
-    // var recordingID = target.id;
-    // this.recordings = this.recordings.filter(recording => recording.id != recordingID);
   }
 }
 </script>

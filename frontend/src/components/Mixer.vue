@@ -88,11 +88,6 @@ export default class Mixer extends Vue {
   async startMixing() {
     console.log("started mixing");
     this.isMixing = true;
-    // const mixedAudio: MediaStreamAudioDestinationNode = this.audioCtx.createMediaStreamDestination();
-    // const merger = this.audioCtx.createChannelMerger(2);
-    // const splitter = this.audioCtx.createChannelSplitter(2);
-    // const channel1 = [0,1];
-    // const channel2 = [1, 0];
     let stream = null;
     try {
       stream = await navigator.mediaDevices.getUserMedia({
@@ -100,21 +95,6 @@ export default class Mixer extends Vue {
         video: false
       });
 
-      // const source1 = this.audioCtx.createMediaElementSource(this.parentAudioElem);
-      // source1.connect(splitter);
-      // console.log("source 1 connected to splitter");
-      // splitter.connect(merger, channel1[0], channel1[1]);
-
-      // console.log("source 1 connected to merger");
-
-      // const source2 = this.audioCtx.createMediaStreamSource(stream);
-      // source2.connect(splitter);
-      // console.log("source 2 connected to splitter");
-      // splitter.connect(merger, channel2[0], channel2[1]);
-      // console.log("source 2 connected to merger");
-
-      // merger.connect(mixedAudio);
-      // merger.connect(this.audioCtx.destination);
       this.mediaStreamSrc = this.audioCtx.createMediaStreamSource(stream);
       this.mediaStreamSrc.connect(this.splitter);
       console.log("stream source connected to splitter");
@@ -130,7 +110,6 @@ export default class Mixer extends Vue {
 
       this.mediaRecorder.onstop = () => this.handleMediaRecorderStop();
     } catch (err) {
-      /* handle the error */
       console.log("The following error occurred: " + err);
     }
   }
@@ -143,7 +122,6 @@ export default class Mixer extends Vue {
   }
 
   handleMediaRecorderStop() {
-    // this.audioCtx.close();
     console.log("data available after MediaRecorder.stop() called.");
     let clipName = prompt("Enter a name for your sound clip");
     if (!clipName) {
