@@ -3,7 +3,7 @@ import { Identity } from "@textile/threads-core";
 export interface User {
   username: string;
   walletAddr: string;
-  email?: string;
+  tracks: Array<TrackMetadata>;
 }
 
 export interface UserCreate {
@@ -15,10 +15,9 @@ export interface UserCreateResponse {
   user: User;
 }
 
-export interface UploadTrackResponse {
-  cid: string;
-  metapath: string;
+export interface BucketUploadResponse {
   name: string;
+  cid: string;
 }
 
 export interface TrackUploadedData {
@@ -39,6 +38,40 @@ export interface Track {
   src: string;
 }
 
+export interface StoreTrackMetadata {
+  cid: string;
+  title: string;
+  parentTrackID?: number;
+  components: Array<string>;
+}
+
+export interface TrackMetadata {
+  cid: string;
+	title: string;
+	composerID: number;
+	composer: User;
+	parentTrackID: number;
+	parentTrack: TrackMetadata;
+	forks: Array<TrackMetadata>;
+	components: Array<Component>;
+}
+
+export interface Component {
+  name: string;
+  tracks: Array<TrackMetadata>;
+}
+
+export interface StoreTrackMetadataResp {
+  cid: string;
+	title: string;
+	composerID: number;
+	composer: User;
+	parentTrackID: number;
+	parentTrack: TrackMetadata;
+	forks: Array<TrackMetadata>;
+	components: Array<Component>;
+}
+
 export interface UserTrackIndex {
   owner: string;
   date: number;
@@ -52,4 +85,5 @@ export interface RecordedTrack {
   name: string;
   instrumentTags: Set<string>;
   isPublished: boolean;
+  parentTrackID?: number;
 }

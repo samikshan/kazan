@@ -10,8 +10,11 @@ import {
   User,
   UserCreate,
   Track,
+  TrackMetadata,
   RecordedTrack,
-  UserTrackIndex
+  UserTrackIndex,
+  StoreTrackMetadataResp,
+  StoreTrackMetadata
 } from "@/store/models";
 import {
   createUser,
@@ -21,7 +24,8 @@ import {
   getTrackIndex,
   uploadTrackToBucket,
   getTracks,
-  storeIndex
+  storeIndex,
+  storeTrackFn
 } from "@/store/api";
 import { HedgehogIdentity } from "@/store/identity";
 import { keys } from "libp2p-crypto";
@@ -38,7 +42,7 @@ class UsersModule extends VuexModule {
   buckets: Buckets | null = null;
   bucketKey = "";
   trackIndex: UserTrackIndex | null = null;
-  tracks: Array<Track> = [];
+  tracks: Array<TrackMetadata> = [];
 
   get username() {
     return (this.user && this.user.username) || null;
@@ -70,7 +74,8 @@ class UsersModule extends VuexModule {
     const wallet = hedgehog.getWallet();
     const user: User = {
       username: userCreateReq.username,
-      walletAddr: wallet
+      walletAddr: wallet,
+      tracks: []
     };
 
     return user;
@@ -87,12 +92,7 @@ class UsersModule extends VuexModule {
   }
 
   @Mutation
-  setTrackIndex(trackIndex: UserTrackIndex) {
-    this.trackIndex = trackIndex;
-  }
-
-  @Mutation
-  setTracks(tracks: Track[]) {
+  setTracks(tracks: TrackMetadata[]) {
     this.tracks = tracks;
   }
 
@@ -108,35 +108,20 @@ class UsersModule extends VuexModule {
 
       const bucketsClient = await createBucketsClient(identity);
       const bucketKey = await createBucket(bucketsClient, "kazan-test-bucket");
-      const trackIndex = await getTrackIndex(
-        bucketsClient,
-        bucketKey,
-        identity
-      );
-      console.log(trackIndex);
-      const tracks = await getTracks(bucketsClient, bucketKey, trackIndex);
-      console.log(tracks);
+
+      // const tracks = await getTracks(bucketsClient, bucketKey, trackIndex);
+      // console.log(tracks);
       this.context.commit("setBucketKey", bucketKey);
       this.context.commit("setBuckets", bucketsClient);
-      this.context.commit("setTrackIndex", trackIndex);
-      this.context.commit("setTracks", tracks);
+      // this.context.commit("setTracks", tracks);
     } catch (e) {
       console.error(e);
     }
   }
 
   @Mutation
-  updateTracks(track: Track) {
+  updateTracks(track: TrackMetadata) {
     this.tracks.push(track);
-  }
-
-  @Mutation
-  async updateTrackIndex(path: string) {
-    if (!this.trackIndex || !this.buckets) {
-      throw new Error("track index or buckets is undefined");
-    }
-    this.trackIndex.paths.push(path);
-    await storeIndex(this.trackIndex, this.buckets, this.bucketKey);
   }
 
   @Action
@@ -145,22 +130,33 @@ class UsersModule extends VuexModule {
     if (!this.buckets) {
       throw new Error("bucket client not yet initialised");
     }
-
-    if (!this.trackIndex) {
-      throw new Error("track index not yet created for user");
-    }
     try {
       const resp = await uploadTrackToBucket(
         recordedTrack,
         this.bucketKey,
         this.buckets
       );
-      const track: Track = {
-        src: `https://${resp.cid}.ipfs.hub.textile.io`,
-        name: resp.name,
-        cid: resp.cid
+
+      const trackMetadata: StoreTrackMetadata = {
+        cid: resp.cid,
+        title: resp.name,
+        parentTrackID: recordedTrack.parentTrackID,
+        components: []
+      }
+
+      const respData: StoreTrackMetadataResp = await storeTrackFn(trackMetadata);
+
+      const track: TrackMetadata = {
+        cid: respData.cid,
+        title: respData.title,
+        composerID: respData.composerID,
+        composer: respData.composer,
+        parentTrackID: respData.parentTrackID,
+        parentTrack: respData.parentTrack,
+        forks: respData.forks,
+        components: respData.components
       };
-      this.context.commit("updateTrackIndex", resp.metapath);
+      // this.context.commit("updateTrackIndex", resp.metapath);
       this.context.commit("updateTracks", track);
     } catch (err) {
       console.error(err);

@@ -4,10 +4,11 @@ import axios from "axios";
 import {
   UserCreate,
   RecordedTrack,
-  UploadTrackResponse,
+  BucketUploadResponse,
   UserTrackIndex,
   Track,
-  TrackData
+  TrackData,
+  StoreTrackMetadata
 } from "@/store/models";
 
 const requestToServer = async (axiosRequestObj: any) => {
@@ -59,6 +60,14 @@ const getFn = async (obj: any) => {
   });
 };
 
+export const storeTrackFn = async (obj: StoreTrackMetadata) => {
+  return requestToServer({
+    url: "/tracks",
+    method: "post",
+    data: obj
+  });
+}
+
 export const hedgehog = new Hedgehog(getFn, setAuthFn, setUserFn);
 
 export async function createUser(user: UserCreate) {
@@ -101,13 +110,10 @@ export async function uploadTrackToBucket(
   recordedTrack: RecordedTrack,
   bucketKey: string,
   buckets: Buckets
-): Promise<UploadTrackResponse> {
+): Promise<BucketUploadResponse> {
   return new Promise((resolve, reject) => {
     try {
       const now = new Date().getTime();
-      const trackSchema: { [key: string]: any } = {};
-      trackSchema["date"] = now;
-      trackSchema["name"] = recordedTrack.name;
       const filename = `${now}_${recordedTrack.name}`;
 
       const data = recordedTrack.data;
@@ -115,24 +121,9 @@ export async function uploadTrackToBucket(
         const path = `tracks/${filename}`;
         console.log("pushing to bucket path: ", path);
         buckets.pushPath(bucketKey, path, audioBuffer).then(raw => {
-          trackSchema["metadata"] = {
-            cid: raw.path.cid.toString(),
+          const response: BucketUploadResponse = {
             name: filename,
-            path: path
-          };
-
-          const metadata = Buffer.from(JSON.stringify(trackSchema, null, 2));
-          const metaname = `${filename}.json`;
-          const metapath = `metadata/${metaname}`;
-
-          console.log("pushing metadata: ", metapath);
-
-          buckets.pushPath(bucketKey, metapath, metadata);
-          const trackData = trackSchema["metadata"];
-          const response: UploadTrackResponse = {
-            cid: trackData.cid,
-            name: recordedTrack.name,
-            metapath: metapath
+            cid: raw.path.cid.toString()
           };
 
           resolve(response);
