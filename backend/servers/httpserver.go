@@ -20,10 +20,12 @@ func NewHTTPSv() *HttpServer {
 
 	userRepo := repositories.NewUserRepo(dbConn)
 	authRepo := repositories.NewAuthRepo(dbConn)
+	trackRepo := repositories.NewTrackRepo(dbConn)
+	compRepo := repositories.NewComponentRepo(dbConn)
 
 	sv := &HttpServer{
 		E: echo.New(),
-		H: handlers.New(userRepo, authRepo),
+		H: handlers.New(userRepo, authRepo, trackRepo, compRepo),
 	}
 
 	sv.E.Use(middleware.Logger())
@@ -44,6 +46,7 @@ func (sv *HttpServer) setupRoutes() {
 	sv.E.POST("/authentication", sv.H.SetNewAuth)
 	sv.E.GET("/authentication", sv.H.GetAuth)
 	sv.E.POST("/user", sv.H.CreateNewUser)
+	sv.E.POST("/tracks", sv.H.NewTrack)
 
 	// sv.E.GET("/ws/userauth", sv.H.UserAuth)
 }

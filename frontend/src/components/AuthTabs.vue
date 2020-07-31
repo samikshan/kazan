@@ -18,6 +18,5 @@ import Signup from "@/components/Signup.vue";
     Signup
   }
 })
-export default class Tabs extends Vue {
-}
+export default class Tabs extends Vue {}
 </script>

@@ -7,8 +7,9 @@ import (
 
 type User struct {
 	gorm.Model
-	Username      string `gorm:"unique;not null"`
-	WalletAddress string `gorm:"not null"`
+	Username      string  `gorm:"unique;not null"`
+	WalletAddress string  `gorm:"not null"`
+	Tracks        []Track `gorm:"foreignkey:ComposerID"`
 }
 
 type UserRepo interface {

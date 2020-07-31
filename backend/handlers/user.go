@@ -148,3 +148,7 @@ func (h *Handler) CreateNewUser(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, nil)
 }
+
+func userIDFromReq(c echo.Context) uint {
+	return 0
+}
