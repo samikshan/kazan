@@ -146,7 +146,9 @@ export default class Mixer extends Vue {
         id: this.recordings.length,
         data: blob,
         localURL: audioURL,
-        name: clipName
+        name: clipName,
+        instrumentTags: new Set<string>(),
+        isPublished: false
       }
     ];
   }

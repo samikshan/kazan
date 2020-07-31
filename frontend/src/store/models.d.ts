@@ -50,4 +50,6 @@ export interface RecordedTrack {
   localURL: string;
   data: Blob;
   name: string;
+  instrumentTags: Set<string>;
+  isPublished: boolean;
 }

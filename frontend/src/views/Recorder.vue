@@ -4,33 +4,27 @@
       <v-card-actions elevation=24>
         <div id="buttons">
           <v-btn @click="handleStartRecording">
-            <v-icon color="teal lighten-1">{{ isRecording ? 'mdi-pause' : 'mdi-microphone' }}</v-icon>
+            <v-icon large color="teal lighten-1">{{ isRecording ? 'mdi-pause' : 'mdi-microphone' }}</v-icon>
+            {{ isRecording ? "Pause Recording" : "Start Recording" }}
           </v-btn>
           <v-btn @click="handleStopRecording">
-            <v-icon color="red">mdi-stop</v-icon>
+            <v-icon large color="red">mdi-stop</v-icon>
+            Stop Recording
           </v-btn>
         </div>
       </v-card-actions>
 
       <v-card class="mx-auto">
         <v-card-title>
-          <h2 class="display-1">Recorded tracks</h2>
+          <h6>Recorded tracks</h6>
         </v-card-title>
         <v-card>
-          <ul class="audio-rec-list">
-            <li v-for="r in recordings" v-bind:key="r.id">
-              <p>{{ r.name }}</p>
-              <audio controls v-bind:src="r.localURL"></audio>
-              <div id="buttons">
-                <button v-bind:id="r.id" v-on:click="handleUploadRecording">
-                  Publish
-                </button>
-                <button v-bind:id="r.id" v-on:click="handleDeleteRecording">
-                  Delete
-                </button>
-              </div>
-            </li>
-          </ul>
+          <RecordingList
+            :recordings="recordings"
+            @add-instrument-tag="handleAddTag($event)"
+            @remove-instrument-tag="handleRemoveTag($event)"
+            @publish-recording="handleUploadRecording($event)"
+          ></RecordingList>
         </v-card>
       </v-card>
     </v-card>
@@ -39,10 +33,15 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
+import RecordingList from "@/components/RecordingList.vue";
 import { RecordedTrack } from "@/store/models";
 import users from "@/store/modules/users";
 
-@Component
+@Component({
+  components: {
+    RecordingList
+  }
+})
 export default class Recorder extends Vue {
   isRecording = false;
   recordings: Array<RecordedTrack> = [];
@@ -71,6 +70,7 @@ export default class Recorder extends Vue {
 
   handleStartRecording(event: Event) {
     console.log(this.mediaRecorder);
+    this.isRecording = true;
     this.mediaRecorder.start();
     console.log(this.mediaRecorder.state);
     console.log("recording started");
@@ -78,6 +78,7 @@ export default class Recorder extends Vue {
 
   handleStopRecording(event: Event) {
     console.log(this.mediaRecorder.state);
+    this.isRecording = false;
     this.mediaRecorder.stop();
     console.log(this.mediaRecorder.state);
     console.log("recording stopped");
@@ -107,18 +108,33 @@ export default class Recorder extends Vue {
         id: this.recordings.length,
         data: blob,
         localURL: audioURL,
-        name: clipName
+        name: clipName,
+        instrumentTags: new Set<string>(),
+        isPublished: false
       }
     ];
   }
 
-  async handleUploadRecording(event: Event) {
-    const target = event.target as HTMLButtonElement;
-    console.log("upload request for recording id: ", target.id);
-    const recID: number = +target.id;
+  handleAddTag(event: {tagText: string, recordingID: number}) {
+    console.log(event);
+    const recID = event.recordingID;
+    this.recordings[recID].instrumentTags.add(event.tagText);
+  }
+
+  handleRemoveTag(event: {tagText: string, recordingID: number}) {
+    console.log(event);
+    const recID = event.recordingID;
+    this.recordings[recID].instrumentTags.delete(event.tagText);
+  }
+
+  async handleUploadRecording(recID: number) {
+    // const target = event.target as HTMLButtonElement;
+    console.log("upload request for recording id: ", recID);
+    // const recID: number = +target.id;
     const recordedTrack = this.recordings[recID];
     try {
       await users.addNewTrack(recordedTrack);
+      recordedTrack.isPublished = true;
     } catch (e) {
       console.error(e);
     }
