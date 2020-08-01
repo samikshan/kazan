@@ -58,10 +58,10 @@ export default class Signup extends Vue {
     } else {
       this.errorMessage = "";
       try {
-        await users.signup({
+        users.signup({
           username: this.username,
           password: this.password
-        });
+        }).then(() => this.$router.push("/"));
       } catch (e) {
         console.error(e);
         this.errorMessage = "Account already exists. Try logging in instead";

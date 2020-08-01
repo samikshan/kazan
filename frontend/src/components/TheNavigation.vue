@@ -16,7 +16,7 @@
       nav
       class="py-0"
     >
-      <v-list-item :class="miniVariant && 'px-0'">
+      <v-list-item>
         <v-list-item-content v-if="!username">
           <router-link :to="{ name: 'signup' }">
             Create an account
