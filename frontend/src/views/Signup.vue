@@ -29,25 +29,47 @@
           />
         </v-form>
       </v-card-text>
-      <v-card-actions>
-        <v-btn @click="handleSignup()">Create My Account</v-btn>
+      <v-card-actions :class="`d-flex justify-center`">
+          <v-btn
+          :loading="signingUp"
+          :disabled="signingUp"
+          large
+          color="blue-grey darken-4"
+          class="mx-auto white--text"
+          @click="handleSignup()"
+        >
+          Sign Up
+        </v-btn>
       </v-card-actions>
+      
+      <v-dialog v-model="dialog" persistent width="400px">
+        <CreateProfileDialog v-bind:address="walletAddr"/>
+      </v-dialog>
     </v-card>
   </v-app>
 </template>
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
+import CreateProfileDialog from "@/components/CreateProfileDialog.vue";
+import { User } from "@/store/models";
 import users from "@/store/modules/users";
 
-@Component
+@Component({
+  components: {
+    CreateProfileDialog
+  }
+})
 export default class Signup extends Vue {
   username = "";
   password = "";
+  walletAddr = "";
   confirmPassword = "";
   showPassword = false;
   showConfirmPassword = false;
   errorMessage = "";
+  dialog = false;
+  signingUp = false;
 
   async handleSignup() {
     console.log(this.username, this.password);
@@ -58,12 +80,21 @@ export default class Signup extends Vue {
     } else {
       this.errorMessage = "";
       try {
-        users.signup({
+        console.log("Signing up...")
+        this.signingUp = true;
+        const user: User = await users.signup({
           username: this.username,
           password: this.password
-        }).then(() => this.$router.push("/"));
+        });
+
+        console.log("User")
+
+        this.walletAddr = user.walletAddr;
+        this.dialog = true;
+        this.signingUp = false;
       } catch (e) {
         console.error(e);
+        this.signingUp = false;
         this.errorMessage = "Account already exists. Try logging in instead";
       }
     }

@@ -9,12 +9,13 @@ import {
 import {
   User,
   UserCreate,
-  Track,
+  UserUpdate,
+  UserUpdateResponse,
   TrackMetadata,
   RecordedTrack,
   UserTrackIndex,
   StoreTrackMetadataResp,
-  StoreTrackMetadata
+  StoreTrackMetadata,
 } from "@/store/models";
 import {
   createUser,
@@ -48,6 +49,10 @@ class UsersModule extends VuexModule {
     return (this.user && this.user.username) || null;
   }
 
+  get walletAddr() {
+    return (this.user && this.user.walletAddr) || null;
+  }
+
   get isLoggedIn() {
     const wallet = hedgehog.getWallet();
     console.log(wallet);
@@ -74,12 +79,23 @@ class UsersModule extends VuexModule {
     const wallet = hedgehog.getWallet();
     const user: User = {
       username: userCreateReq.username,
-      walletAddr: wallet,
-      tracks: []
+      walletAddr: wallet.getAddressString(),
+      instruments: []
     };
 
     return user;
   }
+
+  // @Action
+  // async update(userUpdateReq: UserUpdate) {
+  //   try {
+  //     const respData: UserUpdateResponse = await updateUser(userUpdateReq);
+  //   } catch(err) {
+  //     console.error(err);
+  //   }
+
+  //   return this.user;
+  // }
 
   @Mutation
   setBucketKey(bucketKey: string) {
@@ -100,6 +116,7 @@ class UsersModule extends VuexModule {
   async setupUser() {
     try {
       const wallet = hedgehog.getWallet();
+
       const privKeyBuf = wallet.getPrivateKey();
       const key = await keys.supportedKeys.secp256k1.unmarshalSecp256k1PrivateKey(
         privKeyBuf

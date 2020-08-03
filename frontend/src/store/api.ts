@@ -8,7 +8,8 @@ import {
   UserTrackIndex,
   Track,
   TrackData,
-  StoreTrackMetadata
+  StoreTrackMetadata,
+  UserUpdate
 } from "@/store/models";
 
 const requestToServer = async (axiosRequestObj: any) => {
@@ -66,6 +67,25 @@ export const storeTrackFn = async (obj: StoreTrackMetadata) => {
     method: "post",
     data: obj
   });
+}
+
+export const updateUserFn = async (obj: UserUpdate, identity: Identity) => {
+  const msg = "Authenticate with Kazan service";
+  const enc = new TextEncoder(); // always utf-8
+  const msgEncoded = enc.encode(msg);
+  const sig = await identity.sign(msgEncoded);
+  const dec = new TextDecoder()
+
+  return requestToServer({
+    url: "/user",
+    method: "put",
+    headers: {
+      'encoded-data-message': msg,
+      'encoded-data-signature': sig,
+      'Content-Type': 'application/json'
+    },
+    data: obj
+  })
 }
 
 export const hedgehog = new Hedgehog(getFn, setAuthFn, setUserFn);
