@@ -70,18 +70,18 @@ export const storeTrackFn = async (obj: StoreTrackMetadata) => {
 }
 
 export const updateUserFn = async (obj: UserUpdate, identity: Identity) => {
+  // const challenge = Buffer.from('Sign this string');
   const msg = "Authenticate with Kazan service";
-  const enc = new TextEncoder(); // always utf-8
-  const msgEncoded = enc.encode(msg);
-  const sig = await identity.sign(msgEncoded);
-  const dec = new TextDecoder()
+  const msgBuf = Buffer.from(msg);
+  const sig = await identity.sign(msgBuf);
+  const sigJSON = Buffer.from(sig).toJSON()
 
   return requestToServer({
-    url: "/user",
+    url: "/user/2",
     method: "put",
     headers: {
       'encoded-data-message': msg,
-      'encoded-data-signature': sig,
+      'encoded-data-signature': sigJSON,
       'Content-Type': 'application/json'
     },
     data: obj

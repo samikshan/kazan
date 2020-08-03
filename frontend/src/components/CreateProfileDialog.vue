@@ -68,7 +68,7 @@
       </v-container>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="emitCreateProfile()">Save Profile</v-btn>
+        <v-btn color="blue darken-1" text @click="handleCreateProfile()">Save Profile</v-btn>
       </v-card-actions>
     </v-card>
   </v-card>
@@ -77,6 +77,7 @@
 <script lang="ts">
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import users from "@/store/modules/users";
+import { UserUpdate } from '../store/models';
 
 @Component
 export default class CreateProfileDialog extends Vue {
@@ -145,8 +146,20 @@ export default class CreateProfileDialog extends Vue {
       .indexOf(query.toString().toLowerCase()) > -1
   }
 
-  handleCreateProfile() {
+  async handleCreateProfile() {
     console.log("create profile request");
+    let instruments: Array<string> = []
+    for (const i of this.model) {
+      instruments = [...instruments, i.text]
+    }
+    const userUpdateReq: UserUpdate = {
+      displayName: this.username,
+      instruments: instruments
+    }
+    users.update(userUpdateReq).then(() => {
+      console.log("profile created");
+      this.$emit("profile-created");
+    });
   }
 }
 

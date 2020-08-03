@@ -26,7 +26,8 @@ import {
   uploadTrackToBucket,
   getTracks,
   storeIndex,
-  storeTrackFn
+  storeTrackFn,
+  updateUserFn
 } from "@/store/api";
 import { HedgehogIdentity } from "@/store/identity";
 import { keys } from "libp2p-crypto";
@@ -86,16 +87,30 @@ class UsersModule extends VuexModule {
     return user;
   }
 
-  // @Action
-  // async update(userUpdateReq: UserUpdate) {
-  //   try {
-  //     const respData: UserUpdateResponse = await updateUser(userUpdateReq);
-  //   } catch(err) {
-  //     console.error(err);
-  //   }
+  @Action({ commit: "setUser" })
+  async update(userUpdateReq: UserUpdate) {
+    try {
+      const wallet = hedgehog.getWallet();
 
-  //   return this.user;
-  // }
+      const privKeyBuf = wallet.getPrivateKey();
+      const key = await keys.supportedKeys.secp256k1.unmarshalSecp256k1PrivateKey(
+        privKeyBuf
+      );
+      const identity: HedgehogIdentity = new HedgehogIdentity(key);
+      const respData: User = await updateUserFn(userUpdateReq, identity);
+      console.log(respData);
+      const user: User = {
+        username: respData.username,
+        walletAddr: respData.walletAddr,
+        instruments: []
+      };
+      return user;
+    } catch(err) {
+      console.error(err);
+    }
+
+    return this.user;
+  }
 
   @Mutation
   setBucketKey(bucketKey: string) {

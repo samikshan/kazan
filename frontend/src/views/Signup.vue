@@ -43,7 +43,10 @@
       </v-card-actions>
       
       <v-dialog v-model="dialog" persistent width="400px">
-        <CreateProfileDialog v-bind:address="walletAddr"/>
+        <CreateProfileDialog
+          v-bind:address="walletAddr"
+          @profile-created="handleProfileCreated()"
+        />
       </v-dialog>
     </v-card>
   </v-app>
@@ -98,6 +101,11 @@ export default class Signup extends Vue {
         this.errorMessage = "Account already exists. Try logging in instead";
       }
     }
+  }
+
+  async handleProfileCreated() {
+    this.dialog = false;
+    this.$router.push("/");
   }
 }
 </script>
