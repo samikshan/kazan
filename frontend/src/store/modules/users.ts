@@ -97,6 +97,28 @@ class UsersModule extends VuexModule {
   }
 
   @Action({ commit: "setUser" })
+  async getLoggedInUser() {
+    try {
+      const wallet = hedgehog.getWallet();
+      const privKeyBuf = wallet.getPrivateKey();
+      const identity: HedgehogIdentity = new HedgehogIdentity(privKeyBuf);
+      const respData: any = await getUserFn(identity);
+      console.log(respData);
+
+      const user: User = {
+        id: respData.id,
+        username: respData.username,
+        walletAddr: respData.walletAddress,
+        instruments: []
+      };
+
+      return user;
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  @Action({ commit: "setUser" })
   async update(userUpdateReq: UserUpdate) {
     try {
       if (!this.user) {
@@ -138,10 +160,9 @@ class UsersModule extends VuexModule {
   }
 
   @Action
-  async setupUser() {
+  async setupUserBuckets() {
     try {
       const wallet = hedgehog.getWallet();
-
       console.log(wallet.getPublicKeyString());
 
       const privKeyBuf = wallet.getPrivateKey();

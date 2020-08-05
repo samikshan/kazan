@@ -105,7 +105,7 @@ export default class Signup extends Vue {
 
   async handleProfileCreated() {
     try {
-      await users.setupUser();
+      await users.setupUserBuckets();
 
       this.dialog = false;
       this.$router.push("/");

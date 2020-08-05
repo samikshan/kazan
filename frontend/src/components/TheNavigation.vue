@@ -58,7 +58,8 @@ export default class Nav extends Vue {
   async created() {
     if (users.isLoggedIn && !users.userBucketKey) {
       try {
-        await users.setupUser();
+        await users.getLoggedInUser();
+        await users.setupUserBuckets();
       } catch (e) {
         console.error(e);
       }
