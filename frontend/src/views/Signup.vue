@@ -85,12 +85,12 @@ export default class Signup extends Vue {
       try {
         console.log("Signing up...")
         this.signingUp = true;
-        const user: User = await users.signup({
+        const user: any = await users.signup({
           username: this.username,
           password: this.password
         });
 
-        console.log("User")
+        console.log(user);
 
         this.walletAddr = user.walletAddr;
         this.dialog = true;

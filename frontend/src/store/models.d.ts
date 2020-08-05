@@ -1,6 +1,5 @@
-import { Identity } from "@textile/threads-core";
-
 export interface User {
+  id: number;
   username: string;
   walletAddr: string;
   instruments: Array<Instrument>;

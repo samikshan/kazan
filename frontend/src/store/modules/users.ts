@@ -10,7 +10,6 @@ import {
   User,
   UserCreate,
   UserUpdate,
-  UserUpdateResponse,
   TrackMetadata,
   RecordedTrack,
   UserTrackIndex,
@@ -22,15 +21,14 @@ import {
   hedgehog,
   createBucketsClient,
   createBucket,
-  getTrackIndex,
   uploadTrackToBucket,
-  getTracks,
-  storeIndex,
   storeTrackFn,
-  updateUserFn
+  updateUserFn,
+  getUserFn
 } from "@/store/api";
 import { HedgehogIdentity } from "@/store/hedgehogIdentity";
-// import { keys } from "libp2p-crypto";
+import { TextileIdentity } from "@/store/textileidentity";
+import { keys } from "libp2p-crypto";
 import { Buckets } from "@textile/hub";
 
 @Module({
@@ -76,39 +74,42 @@ class UsersModule extends VuexModule {
 
   @Action({ commit: "setUser" })
   async signup(userCreateReq: UserCreate) {
-    await createUser(userCreateReq)
+    try {
+      await createUser(userCreateReq)
+    
+      const wallet = hedgehog.getWallet();
+      const privKeyBuf = wallet.getPrivateKey();
+      const identity: HedgehogIdentity = new HedgehogIdentity(privKeyBuf);
+      const respData: any = await getUserFn(identity);
+      console.log(respData);
 
-    const wallet = hedgehog.getWallet();
-      // const privKeyBuf: Buffer = wallet.getPrivateKey();
-      // const key = await keys.supportedKeys.secp256k1.unmarshalSecp256k1PrivateKey(
-        // privKeyBuf
-      // );
+      const user: User = {
+        id: respData.id,
+        username: respData.username,
+        walletAddr: respData.walletAddress,
+        instruments: []
+      };
 
-      // const identity: HedgehogIdentity = new HedgehogIdentity(privKeyBuf);
-    const user: User = {
-      username: userCreateReq.username,
-      walletAddr: wallet.getAddressString(),
-      instruments: []
-    };
-
-    return user;
+      return user;
+    } catch (err) {
+      console.error(err);
+    }
   }
 
   @Action({ commit: "setUser" })
   async update(userUpdateReq: UserUpdate) {
     try {
+      if (!this.user) {
+        throw new Error("no logged in user")
+      }
       const wallet = hedgehog.getWallet();
-
       const privKeyBuf = wallet.getPrivateKey();
-      // const key = await keys.supportedKeys.secp256k1.unmarshalSecp256k1PrivateKey(
-        // privKeyBuf
-      // );
-
       const identity: HedgehogIdentity = new HedgehogIdentity(privKeyBuf);
-      console.log(identity);
-      const respData: User = await updateUserFn(userUpdateReq, identity);
-      console.log(respData);
+
+      const respData: User = await updateUserFn(this.user.id, userUpdateReq, identity);
+      
       const user: User = {
+        id: respData.id,
         username: respData.username,
         walletAddr: respData.walletAddr,
         instruments: []
@@ -144,22 +145,19 @@ class UsersModule extends VuexModule {
       console.log(wallet.getPublicKeyString());
 
       const privKeyBuf = wallet.getPrivateKey();
-      // const key = await keys.supportedKeys.secp256k1.unmarshalSecp256k1PrivateKey(
-        // privKeyBuf
-      // );
+      const key = await keys.supportedKeys.secp256k1.unmarshalSecp256k1PrivateKey(
+        privKeyBuf
+      );
 
-      const identity: HedgehogIdentity = new HedgehogIdentity(privKeyBuf);
+      const identity: TextileIdentity = new TextileIdentity(key);
 
       console.log(identity.public.toString());
 
       const bucketsClient = await createBucketsClient(identity);
-      const bucketKey = await createBucket(bucketsClient, "kazan-new-test-bucket");
+      const bucketKey = await createBucket(bucketsClient, "kazan-newest-bucket");
 
-      // const tracks = await getTracks(bucketsClient, bucketKey, trackIndex);
-      // console.log(tracks);
       this.context.commit("setBucketKey", bucketKey);
       this.context.commit("setBuckets", bucketsClient);
-      // this.context.commit("setTracks", tracks);
     } catch (e) {
       console.error(e);
     }

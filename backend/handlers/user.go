@@ -148,6 +148,46 @@ func (h *Handler) CreateNewUser(c echo.Context) error {
 	return c.JSON(http.StatusOK, nil)
 }
 
+func (h *Handler) GetSender(c echo.Context) error {
+	addr, err := walletAddrFromReq(c)
+	if err != nil {
+		log.WithError(err).Error("failed to get user id")
+		return &echo.HTTPError{
+			Code:    http.StatusForbidden,
+			Message: "Failed to validate request sender",
+		}
+	}
+
+	u, err := h.userRepo.GetByWalletAddr(addr)
+	if err != nil {
+		log.WithError(err).Error("failed to retrieve user for wallet address")
+		return &echo.HTTPError{
+			Code:    http.StatusInternalServerError,
+			Message: "Failed to validate request sender",
+		}
+	}
+
+	if u == nil {
+		log.WithError(err).WithField("walletAddress", addr).Error("no user for wallet address found")
+		return &echo.HTTPError{
+			Code:    http.StatusForbidden,
+			Message: "invalid request sender",
+		}
+	}
+
+	senderGetResp := struct {
+		ID            uint   `json:"id"`
+		Username      string `json:"username"`
+		WalletAddress string `json:"walletAddress"`
+	}{
+		ID:            u.ID,
+		Username:      u.Username,
+		WalletAddress: u.WalletAddress,
+	}
+
+	return c.JSON(http.StatusOK, senderGetResp)
+}
+
 func (h *Handler) UpdateUser(c echo.Context) error {
 	toUpdate := c.Param("id")
 	log.Info(toUpdate)
