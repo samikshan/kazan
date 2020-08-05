@@ -10,6 +10,32 @@ import (
 )
 
 func (h *Handler) NewTrack(c echo.Context) error {
+	addr, err := walletAddrFromReq(c)
+	if err != nil {
+		log.WithError(err).Error("failed to get user id")
+		return &echo.HTTPError{
+			Code:    http.StatusForbidden,
+			Message: "Failed to validate request sender",
+		}
+	}
+
+	u, err := h.userRepo.GetByWalletAddr(addr)
+	if err != nil {
+		log.WithError(err).Error("failed to retrieve user for wallet address")
+		return &echo.HTTPError{
+			Code:    http.StatusInternalServerError,
+			Message: "Failed to validate request sender",
+		}
+	}
+
+	if u == nil {
+		log.WithError(err).WithField("walletAddress", addr).Error("no user for wallet address found")
+		return &echo.HTTPError{
+			Code:    http.StatusForbidden,
+			Message: "invalid request sender",
+		}
+	}
+
 	type newTrackReq struct {
 		CID           string
 		Title         string
@@ -53,37 +79,11 @@ func (h *Handler) NewTrack(c echo.Context) error {
 		ParentTrackID: req.ParentTrackID,
 	}
 
-	if err := h.trackRepo.Create(&t); err != nil {
+	if err := h.trackRepo.Create(&t, u); err != nil {
 		log.WithError(err).Error("failed to persist new track information")
 		return &echo.HTTPError{
 			Code:    http.StatusInternalServerError,
 			Message: "failed to store new track information",
-		}
-	}
-
-	// Find user
-	u, err := h.userRepo.GetByID(0)
-	if err != nil {
-		// log.WithError(err).WithField("id", userID).Error("failed to get user with id")
-		return &echo.HTTPError{
-			Code:    http.StatusInternalServerError,
-			Message: "failed to add new track information",
-		}
-	}
-	if u == nil {
-		return &echo.HTTPError{
-			Code:    http.StatusUnauthorized,
-			Message: "user not found",
-		}
-	}
-
-	u.Tracks = append(u.Tracks, t)
-
-	if err := h.userRepo.Update(u); err != nil {
-		log.WithError(err).Error("failed to update tracks for user")
-		return &echo.HTTPError{
-			Code:    http.StatusInternalServerError,
-			Message: "failed to add new track",
 		}
 	}
 
