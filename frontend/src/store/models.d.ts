@@ -54,34 +54,16 @@ export interface StoreTrackMetadata {
   cid: string;
   title: string;
   parentTrackID?: number;
-  components: Array<string>;
+  instruments: Array<string>;
 }
 
 export interface TrackMetadata {
   cid: string;
 	title: string;
 	composerID: number;
-	composer: User;
 	parentTrackID: number;
-	parentTrack: TrackMetadata;
-	forks: Array<TrackMetadata>;
-	components: Array<Component>;
-}
-
-export interface Component {
-  name: string;
-  tracks: Array<TrackMetadata>;
-}
-
-export interface StoreTrackMetadataResp {
-  cid: string;
-	title: string;
-	composerID: number;
-	composer: User;
-	parentTrackID: number;
-	parentTrack: TrackMetadata;
-	forks: Array<TrackMetadata>;
-	components: Array<Component>;
+	nForks: number;
+	instruments: Array<string>;
 }
 
 export interface UserTrackIndex {

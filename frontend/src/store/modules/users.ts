@@ -13,7 +13,6 @@ import {
   TrackMetadata,
   RecordedTrack,
   UserTrackIndex,
-  StoreTrackMetadataResp,
   StoreTrackMetadata,
 } from "@/store/models";
 import {
@@ -43,6 +42,8 @@ class UsersModule extends VuexModule {
   bucketKey = "";
   trackIndex: UserTrackIndex | null = null;
   tracks: Array<TrackMetadata> = [];
+  textileIdent: TextileIdentity | null = null;
+  hedgehogIdent: HedgehogIdentity | null = null; 
 
   get username() {
     return (this.user && this.user.username) || null;
@@ -72,6 +73,12 @@ class UsersModule extends VuexModule {
     this.user = user;
   }
 
+
+  @Mutation
+  setHedgehogIdent(identity: HedgehogIdentity) {
+    this.hedgehogIdent = identity;
+  }
+
   @Action({ commit: "setUser" })
   async signup(userCreateReq: UserCreate) {
     try {
@@ -80,6 +87,7 @@ class UsersModule extends VuexModule {
       const wallet = hedgehog.getWallet();
       const privKeyBuf = wallet.getPrivateKey();
       const identity: HedgehogIdentity = new HedgehogIdentity(privKeyBuf);
+      this.context.commit("setHedgehogIdent", identity);
       const respData: any = await getUserFn(identity);
       console.log(respData);
 
@@ -99,10 +107,10 @@ class UsersModule extends VuexModule {
   @Action({ commit: "setUser" })
   async getLoggedInUser() {
     try {
-      const wallet = hedgehog.getWallet();
-      const privKeyBuf = wallet.getPrivateKey();
-      const identity: HedgehogIdentity = new HedgehogIdentity(privKeyBuf);
-      const respData: any = await getUserFn(identity);
+      if (!this.hedgehogIdent) {
+        throw new Error("Hedgehog identity not set");
+      }
+      const respData: any = await getUserFn(this.hedgehogIdent);
       console.log(respData);
 
       const user: User = {
@@ -121,14 +129,13 @@ class UsersModule extends VuexModule {
   @Action({ commit: "setUser" })
   async update(userUpdateReq: UserUpdate) {
     try {
+      if (!this.hedgehogIdent) {
+        throw new Error("Hedgehog identity not set");
+      }
       if (!this.user) {
         throw new Error("no logged in user")
       }
-      const wallet = hedgehog.getWallet();
-      const privKeyBuf = wallet.getPrivateKey();
-      const identity: HedgehogIdentity = new HedgehogIdentity(privKeyBuf);
-
-      const respData: User = await updateUserFn(this.user.id, userUpdateReq, identity);
+      const respData: User = await updateUserFn(this.user.id, userUpdateReq, this.hedgehogIdent);
       
       const user: User = {
         id: respData.id,
@@ -159,6 +166,11 @@ class UsersModule extends VuexModule {
     this.tracks = tracks;
   }
 
+  @Mutation
+  setTextileIdent(identity: TextileIdentity) {
+    this.textileIdent = identity;
+  }
+
   @Action
   async setupUserBuckets() {
     try {
@@ -171,6 +183,7 @@ class UsersModule extends VuexModule {
       );
 
       const identity: TextileIdentity = new TextileIdentity(key);
+      this.context.commit("setTextileIdent", identity);
 
       console.log(identity.public.toString());
 
@@ -196,6 +209,9 @@ class UsersModule extends VuexModule {
       throw new Error("bucket client not yet initialised");
     }
     try {
+      if (!this.hedgehogIdent) {
+        throw new Error("Hedgehog identity not set");
+      }
       const resp = await uploadTrackToBucket(
         recordedTrack,
         this.bucketKey,
@@ -206,20 +222,18 @@ class UsersModule extends VuexModule {
         cid: resp.cid,
         title: resp.name,
         parentTrackID: recordedTrack.parentTrackID,
-        components: []
+        instruments: Array.from(recordedTrack.instrumentTags)
       }
 
-      const respData: StoreTrackMetadataResp = await storeTrackFn(trackMetadata);
+      const respData: any = await storeTrackFn(trackMetadata, this.hedgehogIdent);
 
       const track: TrackMetadata = {
         cid: respData.cid,
         title: respData.title,
         composerID: respData.composerID,
-        composer: respData.composer,
         parentTrackID: respData.parentTrackID,
-        parentTrack: respData.parentTrack,
-        forks: respData.forks,
-        components: respData.components
+        nForks: respData.nForks,
+        instruments: respData.instruments
       };
       // this.context.commit("updateTrackIndex", resp.metapath);
       this.context.commit("updateTracks", track);

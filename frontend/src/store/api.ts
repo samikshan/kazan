@@ -62,11 +62,24 @@ const getFn = async (obj: any) => {
   });
 };
 
-export const storeTrackFn = async (obj: StoreTrackMetadata) => {
+export const storeTrackFn = async (obj: StoreTrackMetadata, identity: Identity) => {
+  const msg = "Authenticate with Kazan service";
+  const msgBuf = Buffer.from(msg);
+  const msgHashBuf: Buffer = hashPersonalMessage(msgBuf);
+  const msgHash: Uint8Array = new Uint8Array(msgHashBuf);
+  const sig = await identity.sign(msgHash);
+  const sigBuf: Buffer = Buffer.from(sig);
+  const sigHex: string = bufferToHex(sigBuf);
+  const msgHashHex: string = bufferToHex(msgHashBuf);
   return requestToServer({
     url: "/tracks",
     method: "post",
-    data: obj
+    data: obj,
+    headers: {
+      'encoded-data-message': msgHashHex,
+      'encoded-data-signature': sigHex,
+      'Content-Type': 'application/json'
+    }
   });
 }
 

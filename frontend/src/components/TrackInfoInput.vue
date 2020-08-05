@@ -110,7 +110,7 @@ export default class TrackInfoInput extends Vue {
       return;
     }
 
-    this.$emit("tag-added", val[val.length - 1].text);
+    this.$emit("instrument-tag-added", val[val.length - 1].text);
 
     this.model = val.map((v: Record<string, string>) => {
       if (typeof v === 'string') {

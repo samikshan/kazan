@@ -67,7 +67,7 @@ export default class RecordingList extends Vue {
       tagText: tag,
       recordingID: index
     }
-    this.$emit("add-instrumentt-tag", tagInfo);
+    this.$emit("add-instrument-tag", tagInfo);
   }
 
   instrumentTagRemoved(tag: string, index: number) {
