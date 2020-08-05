@@ -34,7 +34,7 @@ export interface Identity {
   public: Public;
 }
 
-export class HedgehogPublicKey implements Public {
+export class TextilePublicKey implements Public {
   constructor(public key: PublicKey) {}
 
   /**
@@ -61,10 +61,9 @@ export class HedgehogPublicKey implements Public {
   }
 }
 
-export class HedgehogIdentity implements Identity {
+export class TextileIdentity implements Identity {
   key: PrivateKey;
   constructor(key: PrivateKey) {
-    // const ed25519key = await unmarshalEd25519PrivateKey(bytes)
     this.key = key;
   }
 
@@ -79,9 +78,9 @@ export class HedgehogIdentity implements Identity {
   /**
    * Returns the Public key.
    */
-  get public(): HedgehogPublicKey {
+  get public(): TextilePublicKey {
     console.log(this.key.public);
-    return new HedgehogPublicKey(this.key.public);
+    return new TextilePublicKey(this.key.public);
   }
 
   /**

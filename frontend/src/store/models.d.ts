@@ -1,9 +1,12 @@
-import { Identity } from "@textile/threads-core";
-
 export interface User {
+  id: number;
   username: string;
   walletAddr: string;
-  tracks: Array<TrackMetadata>;
+  instruments: Array<Instrument>;
+}
+
+export interface Instrument {
+  name: string
 }
 
 export interface UserCreate {
@@ -12,6 +15,15 @@ export interface UserCreate {
 }
 
 export interface UserCreateResponse {
+  user: User;
+}
+
+export interface UserUpdate {
+  displayName?: string;
+  instruments?: Array<string>;
+}
+
+export interface UserUpdateResponse {
   user: User;
 }
 

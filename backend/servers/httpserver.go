@@ -39,14 +39,10 @@ func NewHTTPSv() *HttpServer {
 }
 
 func (sv *HttpServer) setupRoutes() {
-	// sv.E.POST("/signup", sv.H.Signup)
-	// sv.E.POST("/login", sv.H.Login)
-	// sv.E.POST("/token", sv.H.Token)
-
 	sv.E.POST("/authentication", sv.H.SetNewAuth)
 	sv.E.GET("/authentication", sv.H.GetAuth)
+	sv.E.GET("/user", sv.H.GetSender)
 	sv.E.POST("/user", sv.H.CreateNewUser)
+	sv.E.PUT("/user/:id", sv.H.UpdateUser)
 	sv.E.POST("/tracks", sv.H.NewTrack)
-
-	// sv.E.GET("/ws/userauth", sv.H.UserAuth)
 }

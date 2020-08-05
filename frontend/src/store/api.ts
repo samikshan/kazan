@@ -1,4 +1,4 @@
-import { Buckets, Identity, KeyInfo, Client } from "@textile/hub";
+import { Buckets, Identity, Client } from "@textile/hub";
 import { Hedgehog } from "@audius/hedgehog";
 import axios from "axios";
 import {
@@ -8,8 +8,10 @@ import {
   UserTrackIndex,
   Track,
   TrackData,
-  StoreTrackMetadata
+  StoreTrackMetadata,
+  UserUpdate
 } from "@/store/models";
+import { bufferToHex, hashPersonalMessage, ecrecover, ECDSASignature, fromRpcSig } from 'ethereumjs-util';
 
 const requestToServer = async (axiosRequestObj: any) => {
   axiosRequestObj.baseURL = "http://localhost:1323/";
@@ -68,6 +70,57 @@ export const storeTrackFn = async (obj: StoreTrackMetadata) => {
   });
 }
 
+export const getUserFn = async (identity: Identity) => {
+  const msg = "Authenticate with Kazan service";
+  const msgBuf = Buffer.from(msg);
+  const msgHashBuf: Buffer = hashPersonalMessage(msgBuf);
+  const msgHash: Uint8Array = new Uint8Array(msgHashBuf);
+  const sig = await identity.sign(msgHash);
+  const sigBuf: Buffer = Buffer.from(sig);
+  const sigHex: string = bufferToHex(sigBuf);
+  const msgHashHex: string = bufferToHex(msgHashBuf);
+  
+  return requestToServer({
+    url: "/user",
+    method: "get",
+    headers: {
+      'encoded-data-message': msgHashHex,
+      'encoded-data-signature': sigHex,
+      'Content-Type': 'application/json'
+    }
+  })
+}
+
+export const updateUserFn = async (userID: number, obj: UserUpdate, identity: Identity) => {
+  // const challenge = Buffer.from('Sign this string');
+  const msg = "Authenticate with Kazan service";
+  const msgBuf = Buffer.from(msg);
+  const msgHashBuf: Buffer = hashPersonalMessage(msgBuf);
+  const msgHash: Uint8Array = new Uint8Array(msgHashBuf);
+  const sig = await identity.sign(msgHash);
+  const sigBuf: Buffer = Buffer.from(sig);
+  const sigHex: string = bufferToHex(sigBuf);
+  const sigEcdsa : ECDSASignature = fromRpcSig(sigHex);
+  const msgHashHex: string = bufferToHex(msgHashBuf);
+  console.log(sigHex);
+  console.log(msgHashHex);
+
+  const pubkey: string = bufferToHex(ecrecover(msgHashBuf, sigEcdsa.v, sigEcdsa.r, sigEcdsa.s));
+  console.log(pubkey);
+  console.log(identity.public.toString())
+
+  return requestToServer({
+    url: "/user/" + userID,
+    method: "put",
+    headers: {
+      'encoded-data-message': msgHashHex,
+      'encoded-data-signature': sigHex,
+      'Content-Type': 'application/json'
+    },
+    data: obj
+  })
+}
+
 export const hedgehog = new Hedgehog(getFn, setAuthFn, setUserFn);
 
 export async function createUser(user: UserCreate) {
@@ -94,6 +147,7 @@ export async function createBucketsClient(identity: Identity) {
   const buckets = await Buckets.withKeyInfo(keyinfo);
   console.log(buckets);
   const token = await buckets.getToken(identity);
+  console.log(token);
   return buckets;
 }
 

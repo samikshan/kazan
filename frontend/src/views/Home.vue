@@ -13,7 +13,7 @@
       <v-text-field
         hide-details
         single-line
-        clearable=true
+        clearable
         v-model="searchText"
         label="Search tracks, users, etc..."
         @keyup.enter="handleSearch"
