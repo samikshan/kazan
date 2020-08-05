@@ -1,18 +1,17 @@
 package handlers
 
 import (
-	// "context"
-
 	"net/http"
+	"strconv"
+	"strings"
 
-	// "net/http"
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/crypto"
 
 	"github.com/labstack/echo"
-	"github.com/samikshan/kazan/backend/models"
-
-	// "github.com/samikshan/kazan/backend/models"
-
 	log "github.com/sirupsen/logrus"
+
+	"github.com/samikshan/kazan/backend/models"
 )
 
 // var (
@@ -149,6 +148,134 @@ func (h *Handler) CreateNewUser(c echo.Context) error {
 	return c.JSON(http.StatusOK, nil)
 }
 
-func userIDFromReq(c echo.Context) uint {
-	return 0
+func (h *Handler) UpdateUser(c echo.Context) error {
+	toUpdate := c.Param("id")
+	log.Info(toUpdate)
+	id, err := strconv.Atoi(toUpdate)
+	if err != nil {
+		log.WithError(err).Error("userid should be an integer")
+		return &echo.HTTPError{
+			Code:    http.StatusBadRequest,
+			Message: "Invalid user id",
+		}
+	}
+
+	addr, err := walletAddrFromReq(c)
+	if err != nil {
+		log.WithError(err).Error("failed to get user id")
+		return &echo.HTTPError{
+			Code:    http.StatusForbidden,
+			Message: "Failed to validate request sender",
+		}
+	}
+
+	u, err := h.userRepo.GetByWalletAddr(addr)
+	if err != nil {
+		log.WithError(err).Error("failed to retrieve user for wallet address")
+		return &echo.HTTPError{
+			Code:    http.StatusInternalServerError,
+			Message: "Failed to validate request sender",
+		}
+	}
+
+	if u == nil {
+		log.WithError(err).WithField("walletAddress", addr).Error("no user for wallet address found")
+		return &echo.HTTPError{
+			Code:    http.StatusForbidden,
+			Message: "invalid request sender",
+		}
+	}
+
+	senderID := u.ID
+
+	if uint(id) != senderID {
+		return &echo.HTTPError{
+			Code:    http.StatusBadRequest,
+			Message: "User ID to update doesn't match user ID of message sender",
+		}
+	}
+
+	type updateReq struct {
+		DisplayName string
+		Instruments []string
+	}
+
+	req := new(updateReq)
+
+	if err := c.Bind(req); err != nil {
+		log.WithError(err).Error("failed to bind request body")
+		return &echo.HTTPError{
+			Code:    http.StatusBadRequest,
+			Message: "Missing one of the required fields: username, walletAddress",
+		}
+	}
+
+	u, err = h.userRepo.GetByID(senderID)
+	if err != nil {
+		log.WithError(err).Error("failed to get user")
+		return &echo.HTTPError{
+			Code:    http.StatusInternalServerError,
+			Message: "Failed to update user profile",
+		}
+	}
+
+	u.DisplayName = req.DisplayName
+
+	if err := h.userRepo.Update(u); err != nil {
+		log.WithError(err).Error("updating new user failed")
+		return &echo.HTTPError{
+			Code:    http.StatusInternalServerError,
+			Message: "Signing up new user failed",
+		}
+	}
+
+	updateUserResp := struct {
+		Username      string `json:"username"`
+		WalletAddress string `json:"walletAddress"`
+	}{
+		Username:      u.DisplayName,
+		WalletAddress: u.WalletAddress,
+	}
+
+	return c.JSON(http.StatusOK, updateUserResp)
+}
+
+func walletAddrFromReq(c echo.Context) (string, error) {
+	log.Info(c.Request().Header)
+	msgData := c.Request().Header["Encoded-Data-Message"]
+	sigData := c.Request().Header["Encoded-Data-Signature"]
+
+	log.Info(msgData)
+	log.Info(sigData)
+
+	sig := sigData[0]
+	msgHash := msgData[0]
+
+	sigBytes, err := hexutil.Decode(sig)
+	if err != nil {
+		return "", err
+	}
+
+	msgHashBytes, err := hexutil.Decode(msgHash)
+	if err != nil {
+		log.Error(err)
+		return "", err
+	}
+
+	sigBytes[64] -= 27
+
+	sigPublicKey, err := crypto.Ecrecover(msgHashBytes, sigBytes)
+	if err != nil {
+		log.Error(err)
+		return "", err
+	}
+	pubKey, err := crypto.UnmarshalPubkey(sigPublicKey)
+	if err != nil {
+		log.Error(err)
+		return "", err
+	}
+
+	addrHex := strings.ToLower(crypto.PubkeyToAddress(*pubKey).Hex())
+
+	return addrHex, nil
 }

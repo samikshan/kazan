@@ -7,9 +7,11 @@ import (
 
 type User struct {
 	gorm.Model
-	Username      string  `gorm:"unique;not null"`
-	WalletAddress string  `gorm:"not null"`
-	Tracks        []Track `gorm:"foreignkey:ComposerID"`
+	Username      string `gorm:"unique;not null"`
+	DisplayName   string
+	WalletAddress string      `gorm:"unique;not null"`
+	Tracks        []Track     `gorm:"foreignkey:ComposerID"`
+	Instruments   []Component `gorm:"mamy2many:users_instruments"`
 }
 
 type UserRepo interface {
@@ -17,6 +19,7 @@ type UserRepo interface {
 	Update(u *User) error
 	GetByID(id uint) (*User, error)
 	GetByUsername(username string) (*User, error)
+	GetByWalletAddr(addr string) (*User, error)
 }
 
 func (u *User) BeforeCreate(scope *gorm.Scope) error {
