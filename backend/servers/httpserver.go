@@ -21,11 +21,11 @@ func NewHTTPSv() *HttpServer {
 	userRepo := repositories.NewUserRepo(dbConn)
 	authRepo := repositories.NewAuthRepo(dbConn)
 	trackRepo := repositories.NewTrackRepo(dbConn)
-	compRepo := repositories.NewComponentRepo(dbConn)
+	insRepo := repositories.NewInstrumentRepo(dbConn)
 
 	sv := &HttpServer{
 		E: echo.New(),
-		H: handlers.New(userRepo, authRepo, trackRepo, compRepo),
+		H: handlers.New(userRepo, authRepo, trackRepo, insRepo),
 	}
 
 	sv.E.Use(middleware.Logger())

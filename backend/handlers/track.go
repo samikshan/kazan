@@ -14,7 +14,7 @@ func (h *Handler) NewTrack(c echo.Context) error {
 		CID           string
 		Title         string
 		ParentTrackID uint
-		Components    []string
+		Instruments   []string
 	}
 	req := new(newTrackReq)
 	if err := c.Bind(req); err != nil {
@@ -25,30 +25,30 @@ func (h *Handler) NewTrack(c echo.Context) error {
 		}
 	}
 
-	components := make([]models.Component, 0)
-	for _, compName := range req.Components {
-		comp, err := h.componentRepo.GetByName(compName)
+	instruments := make([]models.Instrument, 0)
+	for _, insName := range req.Instruments {
+		ins, err := h.instrumentRepo.GetByName(insName)
 		if err != nil {
 			return &echo.HTTPError{
 				Code:    http.StatusInternalServerError,
 				Message: "failed to add track information",
 			}
-		} else if comp == nil {
-			log.Errorln("component name not found: ", compName)
-			c := &models.Component{Name: compName}
-			if err = h.componentRepo.Create(c); err != nil {
-				log.Errorln("failed to add new component: ", compName)
+		} else if ins == nil {
+			log.Errorln("instrument name not found: ", insName)
+			i := &models.Instrument{Name: insName}
+			if err = h.instrumentRepo.Create(i); err != nil {
+				log.Errorln("failed to add new instrument: ", insName)
 				continue
 			}
-			components = append(components, *c)
+			instruments = append(instruments, *i)
 		} else {
-			components = append(components, *comp)
+			instruments = append(instruments, *ins)
 		}
 	}
 
 	t := models.Track{
 		CID:           req.CID,
-		Components:    components,
+		Instruments:   instruments,
 		Title:         req.Title,
 		ParentTrackID: req.ParentTrackID,
 	}

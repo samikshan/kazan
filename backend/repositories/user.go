@@ -24,6 +24,10 @@ func (repo *UserRepo) Update(u *models.User) error {
 	return repo.db.Save(u).Error
 }
 
+func (repo *UserRepo) UpdateInstruments(u *models.User) error {
+	return repo.db.Model(u).Association("Instruments").Append(u.Instruments).Error
+}
+
 func (repo *UserRepo) GetByUsername(username string) (*models.User, error) {
 	var u models.User
 	if err := repo.db.Where(&models.User{Username: username}).First(&u).Error; err != nil {

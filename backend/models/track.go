@@ -10,8 +10,8 @@ type Track struct {
 	Composer      User
 	ParentTrackID uint
 	ParentTrack   *Track
-	Forks         []Track     `gorm:"foreignkey:ParentTrackID"`
-	Components    []Component `gorm:"mamy2many:tracks_components"`
+	Forks         []Track      `gorm:"foreignkey:ParentTrackID"`
+	Instruments   []Instrument `gorm:"many2many:tracks_instruments"`
 }
 
 type TrackRepo interface {
