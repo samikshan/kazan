@@ -29,8 +29,8 @@ import {
   storeTrackFn,
   updateUserFn
 } from "@/store/api";
-import { HedgehogIdentity } from "@/store/identity";
-import { keys } from "libp2p-crypto";
+import { HedgehogIdentity } from "@/store/hedgehogIdentity";
+// import { keys } from "libp2p-crypto";
 import { Buckets } from "@textile/hub";
 
 @Module({
@@ -76,8 +76,15 @@ class UsersModule extends VuexModule {
 
   @Action({ commit: "setUser" })
   async signup(userCreateReq: UserCreate) {
-    await createUser(userCreateReq);
+    await createUser(userCreateReq)
+
     const wallet = hedgehog.getWallet();
+      // const privKeyBuf: Buffer = wallet.getPrivateKey();
+      // const key = await keys.supportedKeys.secp256k1.unmarshalSecp256k1PrivateKey(
+        // privKeyBuf
+      // );
+
+      // const identity: HedgehogIdentity = new HedgehogIdentity(privKeyBuf);
     const user: User = {
       username: userCreateReq.username,
       walletAddr: wallet.getAddressString(),
@@ -93,10 +100,12 @@ class UsersModule extends VuexModule {
       const wallet = hedgehog.getWallet();
 
       const privKeyBuf = wallet.getPrivateKey();
-      const key = await keys.supportedKeys.secp256k1.unmarshalSecp256k1PrivateKey(
-        privKeyBuf
-      );
-      const identity: HedgehogIdentity = new HedgehogIdentity(key);
+      // const key = await keys.supportedKeys.secp256k1.unmarshalSecp256k1PrivateKey(
+        // privKeyBuf
+      // );
+
+      const identity: HedgehogIdentity = new HedgehogIdentity(privKeyBuf);
+      console.log(identity);
       const respData: User = await updateUserFn(userUpdateReq, identity);
       console.log(respData);
       const user: User = {
@@ -132,14 +141,19 @@ class UsersModule extends VuexModule {
     try {
       const wallet = hedgehog.getWallet();
 
+      console.log(wallet.getPublicKeyString());
+
       const privKeyBuf = wallet.getPrivateKey();
-      const key = await keys.supportedKeys.secp256k1.unmarshalSecp256k1PrivateKey(
-        privKeyBuf
-      );
-      const identity: HedgehogIdentity = new HedgehogIdentity(key);
+      // const key = await keys.supportedKeys.secp256k1.unmarshalSecp256k1PrivateKey(
+        // privKeyBuf
+      // );
+
+      const identity: HedgehogIdentity = new HedgehogIdentity(privKeyBuf);
+
+      console.log(identity.public.toString());
 
       const bucketsClient = await createBucketsClient(identity);
-      const bucketKey = await createBucket(bucketsClient, "kazan-test-bucket");
+      const bucketKey = await createBucket(bucketsClient, "kazan-new-test-bucket");
 
       // const tracks = await getTracks(bucketsClient, bucketKey, trackIndex);
       // console.log(tracks);

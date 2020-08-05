@@ -11,6 +11,7 @@ import {
   StoreTrackMetadata,
   UserUpdate
 } from "@/store/models";
+import { keccakFromString, bufferToHex, keccak256, toBuffer, hashPersonalMessage, ecrecover, ECDSASignature, fromRpcSig } from 'ethereumjs-util';
 
 const requestToServer = async (axiosRequestObj: any) => {
   axiosRequestObj.baseURL = "http://localhost:1323/";
@@ -73,15 +74,26 @@ export const updateUserFn = async (obj: UserUpdate, identity: Identity) => {
   // const challenge = Buffer.from('Sign this string');
   const msg = "Authenticate with Kazan service";
   const msgBuf = Buffer.from(msg);
-  const sig = await identity.sign(msgBuf);
-  const sigJSON = Buffer.from(sig).toJSON()
+  const msgHashBuf: Buffer = hashPersonalMessage(msgBuf);
+  const msgHash: Uint8Array = new Uint8Array(msgHashBuf);
+  const sig = await identity.sign(msgHash);
+  const sigBuf: Buffer = Buffer.from(sig);
+  const sigHex: string = bufferToHex(sigBuf);
+  const sigEcdsa : ECDSASignature = fromRpcSig(sigHex);
+  const msgHashHex: string = bufferToHex(msgHashBuf);
+  console.log(sigHex);
+  console.log(msgHashHex);
+
+  const pubkey: string = bufferToHex(ecrecover(msgHashBuf, sigEcdsa.v, sigEcdsa.r, sigEcdsa.s));
+  console.log(pubkey);
+  console.log(identity.public.toString())
 
   return requestToServer({
     url: "/user/2",
     method: "put",
     headers: {
-      'encoded-data-message': msg,
-      'encoded-data-signature': sigJSON,
+      'encoded-data-message': msgHashHex,
+      'encoded-data-signature': sigHex,
       'Content-Type': 'application/json'
     },
     data: obj
