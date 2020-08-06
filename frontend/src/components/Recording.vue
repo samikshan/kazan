@@ -1,14 +1,10 @@
 <template>
-  <v-card>
-    <!-- <div class="d-flex flex-no-wrap justify-space-between"> -->
-      <!-- <div> -->
-      <v-card-title
-        class="headline"
-        v-text="title"
-      ></v-card-title>
-      <audio controls v-bind:src="localURL"></audio>
-      <!-- </div> -->
-    <!-- </div> -->
+  <v-card
+    class="d-flex align-center justify-space-around ma-2 pa-2"
+    dark
+    color="grey darken-2"
+  >
+    <audio controls v-bind:src="localURL"></audio>
   </v-card>
 </template>
 

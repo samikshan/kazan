@@ -2,7 +2,7 @@
   <v-card
     class="d-flex align-center justify-space-around mb-6"
     dark
-    color="grey darken-1"
+    color="grey darken-2"
   >
     <v-card-title
       class="caption"

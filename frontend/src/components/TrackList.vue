@@ -6,7 +6,10 @@
         :key="index"
         cols="12"
       >
-        <v-card color="blue-grey">
+        <v-card
+          dark
+          color="grey darken-1"
+        >
           <Track :title="track.Title" :cid="track.CID" />
         </v-card>
       </v-col>

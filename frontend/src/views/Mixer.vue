@@ -1,26 +1,41 @@
 <template>
   <v-app>
-    <v-card>
-      <v-btn icon v-if="readyToMix" @click="handleMixButtonClick">
-        <v-icon large color="red">{{ isMixing ? "mdi-stop" : "mdi-microphone" }}</v-icon>
-      </v-btn>
-
-      <v-card class="mx-auto">
-        <v-card-title
-          class=".text-lg-h6"
-        >
-          Mixes
-        </v-card-title>
-        <v-card>
-          <RecordingList
-            :recordings="recordings"
-            @add-instrument-tag="handleAddTag($event)"
-            @remove-instrument-tag="handleRemoveTag($event)"
-            @publish-recording="handleUploadRecording($event)"
-          ></RecordingList>
-        </v-card>
+    <v-skeleton-loader
+      :loading="!readyToMix"
+      type="card"
+    >
+      <v-card
+        class="pa-2 ma-2 d-flex align-center justify-space-around mb-6"
+        dark
+        color="grey darken-1"
+      >
+        <v-btn icon v-if="readyToMix" @click="handleMixButtonClick">
+          <v-icon x-large dark>{{ isMixing ? "mdi-stop" : "mdi-microphone" }}</v-icon>
+        </v-btn>
       </v-card>
-    </v-card>
+      <v-card
+        v-if="recordings.length > 0"
+        dark
+        color="grey darken-1"
+      >
+        <v-card
+          class="pa-2 ma-2 d-flex align-center justify-space-around mb-6"
+          color="grey darken-1"
+        >
+          <v-card-title
+            class=".text-lg-h6"
+          >
+            Mixes
+          </v-card-title>
+        </v-card>
+        <RecordingList
+          :recordings="recordings"
+          @add-instrument-tag="handleAddTag($event)"
+          @remove-instrument-tag="handleRemoveTag($event)"
+          @publish-recording="handleUploadRecording($event)"
+        ></RecordingList>
+      </v-card>
+    </v-skeleton-loader>
   </v-app>
 </template>
 
@@ -29,6 +44,7 @@ import { Component, Vue, Prop } from "vue-property-decorator";
 import axios from "axios";
 import RecordingList from "@/components/RecordingList.vue";
 import { RecordedTrack } from "@/store/models"
+import users from "@/store/modules/users";
 
 @Component({
   components: {
@@ -158,6 +174,34 @@ export default class Mixer extends Vue {
         isPublished: false
       }
     ];
+  }
+
+  handleAddTag(event: {tagText: string, recordingID: number}) {
+    console.log(event);
+    const recID = event.recordingID;
+    this.recordings[recID].instrumentTags.add(event.tagText);
+  }
+
+  handleRemoveTag(event: {tagText: string, recordingID: number}) {
+    console.log(event);
+    const recID = event.recordingID;
+    this.recordings[recID].instrumentTags.delete(event.tagText);
+  }
+
+  async handleUploadRecording(recID: number) {
+    console.log("upload request for recording id: ", recID);
+    const recordedTrack = this.recordings[recID];
+    try {
+      await users.addNewTrack(recordedTrack);
+      recordedTrack.isPublished = true;
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  handleDeleteRecording(event: Event) {
+    const target = event.target as HTMLButtonElement;
+    console.log("delete request for recording id: ", target.id);
   }
 }
 
