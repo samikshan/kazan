@@ -246,6 +246,7 @@ class UsersModule extends VuexModule {
       const respData: any = await storeTrackFn(trackMetadata, this.hedgehogIdent);
 
       const track: TrackMetadata = {
+        id: respData.id,
         cid: respData.cid,
         title: respData.title,
         composerID: respData.composerID,
@@ -253,7 +254,6 @@ class UsersModule extends VuexModule {
         nForks: respData.nForks,
         instruments: respData.instruments
       };
-      // this.context.commit("updateTrackIndex", resp.metapath);
       this.context.commit("updateTracks", track);
     } catch (err) {
       console.error(err);

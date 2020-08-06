@@ -67,6 +67,7 @@ export interface StoreTrackMetadata {
 }
 
 export interface TrackMetadata {
+  id: number
   cid: string;
 	title: string;
 	composerID: number;
