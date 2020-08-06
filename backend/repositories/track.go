@@ -28,11 +28,37 @@ func (repo *TrackRepo) GetByTrackID(id uint) (*models.Track, error) {
 }
 
 // Create creates a new track entry in db
-func (repo *TrackRepo) Create(t *models.Track) error {
-	return repo.db.Create(t).Error
+func (repo *TrackRepo) Create(t *models.Track, composer *models.User) error {
+	return repo.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(t).Error; err != nil {
+			return err
+		}
+
+		if err := tx.Model(composer).Association("Tracks").Append(t).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
 }
 
 // Update updates user entry in db
 func (repo *TrackRepo) Update(t *models.Track) error {
 	return repo.db.Update(t).Error
+}
+
+// UpdateInstruments updates instrument tags associated with a track
+func (repo *TrackRepo) UpdateInstruments(t *models.Track) error {
+	return repo.db.Model(t).Association("Instruments").Append(t.Instruments).Error
+}
+
+// GetTracksByInstrument retrieves all tracks that DO NOT have the listed instruments
+func (repo *TrackRepo) GetTracksByInstrument(instrumentNames []string) ([]*models.Instrument, error) {
+	// logrus.Info(instruments)
+	var instruments []*models.Instrument
+	if err := repo.db.Not("name", instrumentNames).Preload("Tracks").Find(&instruments).Error; err != nil {
+		return nil, err
+	}
+
+	return instruments, nil
 }

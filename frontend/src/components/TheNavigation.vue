@@ -3,44 +3,55 @@
     absolute
   >
     <v-img src="../assets/kazan-logo-1.png">
-      <v-row align="end" class="lightbox white--text pa-2 fill-height">
+      <!-- <v-row align="end" class="lightbox white--text pa-2 fill-height">
         <v-col>
           <div class="subheading">Jonathan Lee</div>
           <div class="body-1">heyfromjonathan@gmail.com</div>
         </v-col>
-      </v-row>
+      </v-row> -->
     </v-img>
 
-    <v-list
-      dense
-      nav
-      class="py-0"
-    >
-      <v-list-item>
-        <v-list-item-content v-if="!username">
-          <router-link :to="{ name: 'signup' }">
-            Create an account
-          </router-link>
-        </v-list-item-content>
-        <v-list-item-content v-else>
-          <router-link :to="'/@' + username">
-            {{username}}
-          </router-link>
-        </v-list-item-content>
-      </v-list-item>
-
-      <v-divider></v-divider>
-
-      <v-list-item
-        v-for="item in items"
-        :key="item.title"
-        link
+    <v-container>
+      <v-list
+        nav
+        class="py-0"
       >
-        <v-list-item-content>
-          <v-list-item-title>{{ item.title }}</v-list-item-title>
-        </v-list-item-content>
-      </v-list-item>
-    </v-list>
+        <v-list-item>
+          <v-list-item-content v-if="!username">
+            <router-link :to="{ name: 'signup' }">
+              Create an account
+            </router-link>
+          </v-list-item-content>
+          <v-list-item-content v-else>
+            <router-link :to="'/@' + username">
+              {{username}}
+            </router-link>
+          </v-list-item-content>
+        </v-list-item>
+
+        <v-divider></v-divider>
+
+        <v-list-item
+          v-for="item in items"
+          :key="item.title"
+          link
+        >
+          <v-list-item-content>
+            <v-list-item-title>{{ item.title }}</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+      
+        <v-spacer></v-spacer>
+        
+        <v-btn
+          class="ma-2"
+          @click="$router.push('record')"
+        >   
+          Record Tracks
+          <v-icon right>mdi-cloud-upload</v-icon>
+        </v-btn>
+      </v-list>
+    </v-container>
   </v-navigation-drawer>
 </template>
 
@@ -58,7 +69,9 @@ export default class Nav extends Vue {
   async created() {
     if (users.isLoggedIn && !users.userBucketKey) {
       try {
-        await users.setupUser();
+        await users.getLoggedInUser();
+        await users.setupUserBuckets();
+        await users.loadUserFeed();
       } catch (e) {
         console.error(e);
       }

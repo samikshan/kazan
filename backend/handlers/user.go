@@ -261,11 +261,42 @@ func (h *Handler) UpdateUser(c echo.Context) error {
 
 	u.DisplayName = req.DisplayName
 
-	if err := h.userRepo.Update(u); err != nil {
-		log.WithError(err).Error("updating new user failed")
+	instruments := make([]models.Instrument, 0)
+	for _, insName := range req.Instruments {
+		ins, err := h.instrumentRepo.GetByName(insName)
+		if err != nil {
+			return &echo.HTTPError{
+				Code:    http.StatusInternalServerError,
+				Message: "failed to add track information",
+			}
+		} else if ins == nil {
+			log.Errorln("instrument name not found: ", insName)
+			i := &models.Instrument{Name: insName}
+			if err = h.instrumentRepo.Create(i); err != nil {
+				log.Errorln("failed to add new instrument: ", insName)
+				continue
+			}
+			instruments = append(instruments, *i)
+		} else {
+			instruments = append(instruments, *ins)
+		}
+	}
+
+	u.Instruments = instruments
+
+	if err := h.userRepo.UpdateInstruments(u); err != nil {
+		log.WithError(err).WithField("userID", u.ID).Error("user update failed")
 		return &echo.HTTPError{
 			Code:    http.StatusInternalServerError,
-			Message: "Signing up new user failed",
+			Message: "Failed to update user details",
+		}
+	}
+
+	if err := h.userRepo.Update(u); err != nil {
+		log.WithError(err).WithField("userID", u.ID).Error("user update failed")
+		return &echo.HTTPError{
+			Code:    http.StatusInternalServerError,
+			Message: "Failed to update user details",
 		}
 	}
 

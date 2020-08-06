@@ -78,6 +78,24 @@ const routes: Array<RouteConfig> = [
     }
   },
   {
+    path: '/jam',
+    name: 'jam',
+    component: () => import('@/views/Mixer.vue'),
+    meta: {
+      title: 'Jam On Track',
+      metaTags: [
+        {
+          name: 'description',
+          content: 'Page to jam on existing tracks.'
+        },
+        {
+          property: 'og:description',
+          content: 'Page to jam on existing tracks.'
+        }
+      ]
+    }
+  },
+  {
     path: '/search/:text',
     name: 'search',
     component: () => import('@/views/Search.vue'),

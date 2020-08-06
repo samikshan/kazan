@@ -40,6 +40,6 @@ func AutoMigrate(db *gorm.DB) {
 		&models.User{},
 		&models.Auth{},
 		&models.Track{},
-		&models.Component{},
+		&models.Instrument{},
 	)
 }

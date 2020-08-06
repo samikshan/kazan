@@ -13,8 +13,10 @@ import {
   TrackMetadata,
   RecordedTrack,
   UserTrackIndex,
-  StoreTrackMetadataResp,
   StoreTrackMetadata,
+  Instrument,
+  TracksByInstrument,
+  UserFeed,
 } from "@/store/models";
 import {
   createUser,
@@ -24,7 +26,8 @@ import {
   uploadTrackToBucket,
   storeTrackFn,
   updateUserFn,
-  getUserFn
+  getUserFn,
+  getUserFeedFn
 } from "@/store/api";
 import { HedgehogIdentity } from "@/store/hedgehogIdentity";
 import { TextileIdentity } from "@/store/textileidentity";
@@ -39,10 +42,14 @@ import { Buckets } from "@textile/hub";
 })
 class UsersModule extends VuexModule {
   user: User | null = null;
+  userFeed: UserFeed | null = null; 
   buckets: Buckets | null = null;
   bucketKey = "";
   trackIndex: UserTrackIndex | null = null;
   tracks: Array<TrackMetadata> = [];
+  recommendedTracks: Array<TrackMetadata> = [];
+  textileIdent: TextileIdentity | null = null;
+  hedgehogIdent: HedgehogIdentity | null = null;
 
   get username() {
     return (this.user && this.user.username) || null;
@@ -50,6 +57,10 @@ class UsersModule extends VuexModule {
 
   get walletAddr() {
     return (this.user && this.user.walletAddr) || null;
+  }
+
+  get isUserIdentSet() {
+    return !this.hedgehogIdent;
   }
 
   get isLoggedIn() {
@@ -67,9 +78,19 @@ class UsersModule extends VuexModule {
     return this.tracks;
   }
 
+  get getUserFeed() {
+    return this.userFeed;
+  }
+
   @Mutation
   setUser(user: User) {
     this.user = user;
+  }
+
+
+  @Mutation
+  setHedgehogIdent(identity: HedgehogIdentity) {
+    this.hedgehogIdent = identity;
   }
 
   @Action({ commit: "setUser" })
@@ -80,6 +101,33 @@ class UsersModule extends VuexModule {
       const wallet = hedgehog.getWallet();
       const privKeyBuf = wallet.getPrivateKey();
       const identity: HedgehogIdentity = new HedgehogIdentity(privKeyBuf);
+      this.context.commit("setHedgehogIdent", identity);
+      const respData: any = await getUserFn(identity);
+      console.log(respData);
+
+      const user: User = {
+        id: respData.id,
+        username: respData.username,
+        walletAddr: respData.walletAddress,
+        instruments: []
+      };
+
+      return user;
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  @Action({ commit: "setUser" })
+  async getLoggedInUser() {
+    try {
+      let identity: HedgehogIdentity | null = this.hedgehogIdent;
+      if (!identity) {
+        const wallet = hedgehog.getWallet();
+        const privKeyBuf = wallet.getPrivateKey();
+        identity = new HedgehogIdentity(privKeyBuf);
+      }
+      this.context.commit("setHedgehogIdent", identity);
       const respData: any = await getUserFn(identity);
       console.log(respData);
 
@@ -99,14 +147,13 @@ class UsersModule extends VuexModule {
   @Action({ commit: "setUser" })
   async update(userUpdateReq: UserUpdate) {
     try {
+      if (!this.hedgehogIdent) {
+        throw new Error("Hedgehog identity not set");
+      }
       if (!this.user) {
         throw new Error("no logged in user")
       }
-      const wallet = hedgehog.getWallet();
-      const privKeyBuf = wallet.getPrivateKey();
-      const identity: HedgehogIdentity = new HedgehogIdentity(privKeyBuf);
-
-      const respData: User = await updateUserFn(this.user.id, userUpdateReq, identity);
+      const respData: User = await updateUserFn(this.user.id, userUpdateReq, this.hedgehogIdent);
       
       const user: User = {
         id: respData.id,
@@ -137,11 +184,15 @@ class UsersModule extends VuexModule {
     this.tracks = tracks;
   }
 
+  @Mutation
+  setTextileIdent(identity: TextileIdentity) {
+    this.textileIdent = identity;
+  }
+
   @Action
-  async setupUser() {
+  async setupUserBuckets() {
     try {
       const wallet = hedgehog.getWallet();
-
       console.log(wallet.getPublicKeyString());
 
       const privKeyBuf = wallet.getPrivateKey();
@@ -150,6 +201,7 @@ class UsersModule extends VuexModule {
       );
 
       const identity: TextileIdentity = new TextileIdentity(key);
+      this.context.commit("setTextileIdent", identity);
 
       console.log(identity.public.toString());
 
@@ -175,6 +227,9 @@ class UsersModule extends VuexModule {
       throw new Error("bucket client not yet initialised");
     }
     try {
+      if (!this.hedgehogIdent) {
+        throw new Error("Hedgehog identity not set");
+      }
       const resp = await uploadTrackToBucket(
         recordedTrack,
         this.bucketKey,
@@ -185,25 +240,60 @@ class UsersModule extends VuexModule {
         cid: resp.cid,
         title: resp.name,
         parentTrackID: recordedTrack.parentTrackID,
-        components: []
+        instruments: Array.from(recordedTrack.instrumentTags)
       }
 
-      const respData: StoreTrackMetadataResp = await storeTrackFn(trackMetadata);
+      const respData: any = await storeTrackFn(trackMetadata, this.hedgehogIdent);
 
       const track: TrackMetadata = {
         cid: respData.cid,
         title: respData.title,
         composerID: respData.composerID,
-        composer: respData.composer,
         parentTrackID: respData.parentTrackID,
-        parentTrack: respData.parentTrack,
-        forks: respData.forks,
-        components: respData.components
+        nForks: respData.nForks,
+        instruments: respData.instruments
       };
       // this.context.commit("updateTrackIndex", resp.metapath);
       this.context.commit("updateTracks", track);
     } catch (err) {
       console.error(err);
+    }
+  }
+
+  @Mutation
+  setUserFeed(userFeed: UserFeed) {
+    this.userFeed = userFeed;
+  }
+
+  @Action
+  async loadUserFeed() {
+    try {
+      if (!this.hedgehogIdent) {
+        throw new Error("Hedgehog identity not set");
+      }
+      if (!this.user) {
+        throw new Error("no logged in user")
+      }
+
+      const respData: Array<object> = await getUserFeedFn(this.hedgehogIdent);
+      const userFeed: UserFeed = {
+        tracks: []
+      }
+
+      for (let i = 0; i < respData.length; i++) {
+        const feedElem: any = respData[i];
+        userFeed.tracks = [
+          ...userFeed.tracks,
+          {
+            name: feedElem.Name,
+            tracks: feedElem.Tracks
+          }
+        ];
+      }
+
+      this.context.commit("setUserFeed", userFeed);
+    } catch (err) {
+      console.error(err)
     }
   }
 }

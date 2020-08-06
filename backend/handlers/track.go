@@ -10,11 +10,37 @@ import (
 )
 
 func (h *Handler) NewTrack(c echo.Context) error {
+	addr, err := walletAddrFromReq(c)
+	if err != nil {
+		log.WithError(err).Error("failed to get user id")
+		return &echo.HTTPError{
+			Code:    http.StatusForbidden,
+			Message: "Failed to validate request sender",
+		}
+	}
+
+	u, err := h.userRepo.GetByWalletAddr(addr)
+	if err != nil {
+		log.WithError(err).Error("failed to retrieve user for wallet address")
+		return &echo.HTTPError{
+			Code:    http.StatusInternalServerError,
+			Message: "Failed to validate request sender",
+		}
+	}
+
+	if u == nil {
+		log.WithError(err).WithField("walletAddress", addr).Error("no user for wallet address found")
+		return &echo.HTTPError{
+			Code:    http.StatusForbidden,
+			Message: "invalid request sender",
+		}
+	}
+
 	type newTrackReq struct {
 		CID           string
 		Title         string
 		ParentTrackID uint
-		Components    []string
+		Instruments   []string
 	}
 	req := new(newTrackReq)
 	if err := c.Bind(req); err != nil {
@@ -25,35 +51,35 @@ func (h *Handler) NewTrack(c echo.Context) error {
 		}
 	}
 
-	components := make([]models.Component, 0)
-	for _, compName := range req.Components {
-		comp, err := h.componentRepo.GetByName(compName)
+	instruments := make([]models.Instrument, 0)
+	for _, insName := range req.Instruments {
+		ins, err := h.instrumentRepo.GetByName(insName)
 		if err != nil {
 			return &echo.HTTPError{
 				Code:    http.StatusInternalServerError,
 				Message: "failed to add track information",
 			}
-		} else if comp == nil {
-			log.Errorln("component name not found: ", compName)
-			c := &models.Component{Name: compName}
-			if err = h.componentRepo.Create(c); err != nil {
-				log.Errorln("failed to add new component: ", compName)
+		} else if ins == nil {
+			log.Errorln("instrument name not found: ", insName)
+			i := &models.Instrument{Name: insName}
+			if err = h.instrumentRepo.Create(i); err != nil {
+				log.Errorln("failed to add new instrument: ", insName)
 				continue
 			}
-			components = append(components, *c)
+			instruments = append(instruments, *i)
 		} else {
-			components = append(components, *comp)
+			instruments = append(instruments, *ins)
 		}
 	}
 
 	t := models.Track{
 		CID:           req.CID,
-		Components:    components,
+		Instruments:   instruments,
 		Title:         req.Title,
 		ParentTrackID: req.ParentTrackID,
 	}
 
-	if err := h.trackRepo.Create(&t); err != nil {
+	if err := h.trackRepo.Create(&t, u); err != nil {
 		log.WithError(err).Error("failed to persist new track information")
 		return &echo.HTTPError{
 			Code:    http.StatusInternalServerError,
@@ -61,31 +87,49 @@ func (h *Handler) NewTrack(c echo.Context) error {
 		}
 	}
 
-	// Find user
-	u, err := h.userRepo.GetByID(0)
-	if err != nil {
-		// log.WithError(err).WithField("id", userID).Error("failed to get user with id")
-		return &echo.HTTPError{
-			Code:    http.StatusInternalServerError,
-			Message: "failed to add new track information",
-		}
-	}
-	if u == nil {
-		return &echo.HTTPError{
-			Code:    http.StatusUnauthorized,
-			Message: "user not found",
-		}
-	}
-
-	u.Tracks = append(u.Tracks, t)
-
-	if err := h.userRepo.Update(u); err != nil {
-		log.WithError(err).Error("failed to update tracks for user")
-		return &echo.HTTPError{
-			Code:    http.StatusInternalServerError,
-			Message: "failed to add new track",
-		}
-	}
-
 	return c.JSON(http.StatusOK, t)
+}
+
+func (h *Handler) GetUserFeed(c echo.Context) error {
+	addr, err := walletAddrFromReq(c)
+	if err != nil {
+		log.WithError(err).Error("failed to get user id")
+		return &echo.HTTPError{
+			Code:    http.StatusForbidden,
+			Message: "Failed to validate request sender",
+		}
+	}
+
+	u, err := h.userRepo.GetByWalletAddr(addr)
+	if err != nil {
+		log.WithError(err).Error("failed to retrieve user for wallet address")
+		return &echo.HTTPError{
+			Code:    http.StatusInternalServerError,
+			Message: "Failed to validate request sender",
+		}
+	}
+
+	if u == nil {
+		log.WithError(err).WithField("walletAddress", addr).Error("no user for wallet address found")
+		return &echo.HTTPError{
+			Code:    http.StatusForbidden,
+			Message: "invalid request sender",
+		}
+	}
+
+	instruments := make([]string, 0)
+	for _, instrument := range u.Instruments {
+		instruments = append(instruments, instrument.Name)
+	}
+
+	tracksFiltered, err := h.trackRepo.GetTracksByInstrument(instruments)
+	if err != nil {
+		log.WithError(err).Error("failed to get tracks for instruments")
+		return &echo.HTTPError{
+			Code:    http.StatusInternalServerError,
+			Message: "Failed to get tracks",
+		}
+	}
+
+	return c.JSON(http.StatusOK, tracksFiltered)
 }

@@ -92,6 +92,8 @@ export default class Signup extends Vue {
 
         console.log(user);
 
+        users.setupUserBuckets();
+        
         this.walletAddr = user.walletAddr;
         this.dialog = true;
         this.signingUp = false;
@@ -104,8 +106,12 @@ export default class Signup extends Vue {
   }
 
   async handleProfileCreated() {
-    this.dialog = false;
-    this.$router.push("/");
+    try {
+      this.dialog = false;
+      this.$router.push("/");
+    } catch (err) {
+      console.error(err);
+    }
   }
 }
 </script>

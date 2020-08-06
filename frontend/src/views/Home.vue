@@ -1,13 +1,4 @@
 <template>
-    <!-- <Signup v-if="!isLoggedIn" />
-    <div v-else>
-      <p v-if="!bucketKey">Buckets not setup</p>
-      <div v-else>
-        <p>Buckets set up! Can upload stuff to Textile now</p>
-        <Recorder />
-        <Profile />
-      </div>
-    </div> -->
   <v-app>
     <v-container fluid>
       <v-text-field
@@ -18,50 +9,50 @@
         label="Search tracks, users, etc..."
         @keyup.enter="handleSearch"
       ></v-text-field>
-      <v-divider></v-divider>
-      <v-btn
-        @click="$router.push('record')">
-          Record And Upload Fresh Tracks
-          <v-icon>mdi-cloud-upload</v-icon>
-      </v-btn>
+      <v-container fluid v-if="userFeed">
+        <v-row dense>
+          <v-col
+            v-for="(section, index) in userFeed.tracks"
+            :key="index"
+            cols="12"
+          >
+            <v-subheader
+              :key="section.name"
+            >
+              {{ section.name }}
+            </v-subheader>
+            <TrackList v-bind:tracks="section.tracks" />
+          </v-col>
+        </v-row>
+      </v-container>
     </v-container>
   </v-app>
 </template>
 
 <script lang="ts">
-// @ is an alias to /src
-// import Signup from "@/components/Signup.vue";
-// import Recorder from "@/components/Recorder.vue";
-// import Profile from "@/components/Profile.vue";
 import users from "@/store/modules/users";
-import { Component, Vue } from "vue-property-decorator";
+import { Component, Vue, Watch } from "vue-property-decorator";
+import TrackList from "@/components/TrackList.vue";
+import { TrackMetadata, UserFeed } from '../store/models';
 
-@Component
+@Component({
+  components: {
+    TrackList,
+  }
+})
 export default class Home extends Vue {
   searchText? = "";
-  async created() {
-    if (users.isLoggedIn && !users.userBucketKey) {
-      try {
-        await users.setupUser();
-      } catch (e) {
-        console.error(e);
-      }
-    }
-  }
+  recommendedTracks: Array<TrackMetadata> = [];
 
-  get isLoggedIn() {
-    return users.isLoggedIn;
-  }
-
-  get bucketKey() {
-    return users.userBucketKey;
+  get userFeed() {
+    return users.getUserFeed;
   }
 
   handleSearch() {
     if (!this.searchText) {
-      console.log("empty search text")
+      console.log("empty search text");
     } else {
-      this.$router.push({ name: "search", params: { text: this.searchText }})
+      this.$router.push({ name: "search", params: { text: this.searchText }});
     }
   }
 }
