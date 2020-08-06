@@ -18,7 +18,7 @@ func NewTrackRepo(db *gorm.DB) *TrackRepo {
 // GetByTrackID gets user by track id
 func (repo *TrackRepo) GetByTrackID(id uint) (*models.Track, error) {
 	var t models.Track
-	if err := repo.db.Where(&models.Track{Model: gorm.Model{ID: id}}).First(&t).Error; err != nil {
+	if err := repo.db.Where(&models.Track{Model: gorm.Model{ID: id}}).Preload("Instruments").First(&t).Error; err != nil {
 		if gorm.IsRecordNotFoundError(err) {
 			return nil, nil
 		}
@@ -54,7 +54,6 @@ func (repo *TrackRepo) UpdateInstruments(t *models.Track) error {
 
 // GetTracksByInstrument retrieves all tracks that DO NOT have the listed instruments
 func (repo *TrackRepo) GetTracksByInstrument(instrumentNames []string) ([]*models.Instrument, error) {
-	// logrus.Info(instruments)
 	var instruments []*models.Instrument
 	if err := repo.db.Not("name", instrumentNames).Preload("Tracks").Find(&instruments).Error; err != nil {
 		return nil, err

@@ -51,7 +51,20 @@ func (h *Handler) NewTrack(c echo.Context) error {
 		}
 	}
 
-	instruments := make([]models.Instrument, 0)
+	parentTrack, err := h.trackRepo.GetByTrackID(req.ParentTrackID)
+	if err != nil {
+		return &echo.HTTPError{
+			Code:    http.StatusInternalServerError,
+			Message: "failed to add track information",
+		}
+	}
+
+	var instruments []models.Instrument
+	if parentTrack != nil {
+		instruments = parentTrack.Instruments
+		log.Info(parentTrack)
+	}
+
 	for _, insName := range req.Instruments {
 		ins, err := h.instrumentRepo.GetByName(insName)
 		if err != nil {
