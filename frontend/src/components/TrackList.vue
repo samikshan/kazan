@@ -1,6 +1,6 @@
 <template>
-  <v-container>
-    <v-row dense>
+  <v-container fluid>
+    <v-row>
       <v-col
         v-for="(track, index) in tracks"
         :key="index"

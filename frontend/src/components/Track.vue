@@ -1,14 +1,19 @@
 <template>
-  <v-card>
-    <!-- <div class="d-flex flex-no-wrap justify-space-between"> -->
-      <!-- <div> -->
-      <v-card-title
-        class="headline"
-        v-text="title"
-      ></v-card-title>
-      <audio controls v-bind:src="url"></audio>
-      <!-- </div> -->
-    <!-- </div> -->
+  <v-card
+    class="d-flex align-center justify-space-around mb-6"
+    dark
+    color="grey darken-1"
+  >
+    <v-card-title
+      class="caption"
+      v-text="title"
+    ></v-card-title>
+    <v-spacer />
+    <audio controls v-bind:src="url"></audio>
+    <v-spacer />
+    <v-btn @click="jamOnTrack()">
+      Jam On This One
+    </v-btn>
   </v-card>
 </template>
 
@@ -22,6 +27,10 @@ export default class Track extends Vue {
 
   get url() {
       return `https://${this.cid}.ipfs.hub.textile.io`
+  }
+
+  jamOnTrack() {
+    console.log("need to jam on this piece of music");
   }
 }
 </script>
