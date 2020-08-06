@@ -30,7 +30,7 @@ export default class Track extends Vue {
   }
 
   jamOnTrack() {
-    console.log("need to jam on this piece of music");
+    this.$router.push({ name: "jam", params: { parentCID: this.cid } });
   }
 }
 </script>

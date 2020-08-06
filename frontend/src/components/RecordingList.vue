@@ -1,12 +1,12 @@
 <template>
-  <v-container>
-    <v-row dense>
+  <v-container fluid>
+    <v-row>
       <v-col
         v-for="(recording, index) in recordings"
         :key="index"
         cols="12"
       >
-        <v-card>
+        <v-card color="blue-grey">
           <Recording :title="recording.name" :localURL="recording.localURL" />
           <v-card-actions v-if="!recording.isPublished">
             <v-dialog v-model="dialogOpen" persistent max-width="600px">

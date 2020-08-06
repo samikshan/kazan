@@ -1,21 +1,23 @@
 <template>
   <v-app>
-    <v-card> 
+    <v-card>
       <v-btn icon v-if="readyToMix" @click="handleMixButtonClick">
-        <v-icon color="red">{{ isMixing ? "mdi-stop" : "mdi-microphone" }}</v-icon>
+        <v-icon large color="red">{{ isMixing ? "mdi-stop" : "mdi-microphone" }}</v-icon>
       </v-btn>
 
       <v-card class="mx-auto">
-        <v-card-title>
-          <h2 class="display-1">Mixes</h2>
+        <v-card-title
+          class=".text-lg-h6"
+        >
+          Mixes
         </v-card-title>
         <v-card>
-          <ul class="audio-rec-list">
-            <li v-for="r in recordings" v-bind:key="r.id">
-              <p>{{ r.name }}</p>
-              <audio controls v-bind:src="r.localURL"></audio>
-            </li>
-          </ul>
+          <RecordingList
+            :recordings="recordings"
+            @add-instrument-tag="handleAddTag($event)"
+            @remove-instrument-tag="handleRemoveTag($event)"
+            @publish-recording="handleUploadRecording($event)"
+          ></RecordingList>
         </v-card>
       </v-card>
     </v-card>
@@ -25,9 +27,14 @@
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
 import axios from "axios";
+import RecordingList from "@/components/RecordingList.vue";
 import { RecordedTrack } from "@/store/models"
 
-@Component
+@Component({
+  components: {
+    RecordingList
+  }
+})
 export default class Mixer extends Vue {
   audioCtx: AudioContext = new AudioContext();
   mediaStreamSrc!: MediaStreamAudioSourceNode;
@@ -48,7 +55,7 @@ export default class Mixer extends Vue {
   @Prop() parentAudioCID!: string;
 
   get parentAudioSrc() {
-    return `https://${this.parentAudioCID}.ipfs.hub.textile.io`
+    return `https://${this.$route.params.parentCID}.ipfs.hub.textile.io`
   }
 
   async created() {
