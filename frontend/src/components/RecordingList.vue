@@ -6,12 +6,19 @@
         :key="index"
         cols="12"
       >
-        <v-card color="blue-grey">
+        <v-card
+          dark
+          color="grey darken-1"
+        >
+          <v-card-subtitle>
+            Recording: {{index + 1 }}
+          </v-card-subtitle>
           <Recording :title="recording.name" :localURL="recording.localURL" />
-          <v-card-actions v-if="!recording.isPublished">
+          <v-card-actions class="d-flex align-center justify-space-around" v-if="!recording.isPublished">
             <v-dialog v-model="dialogOpen" persistent max-width="600px">
               <template v-slot:activator="{ on, attrs }">
                 <v-btn
+                  color="grey darken-3"
                   v-bind="attrs"
                   v-on="on"
                 >
@@ -34,7 +41,7 @@
                 </v-card-actions>
               </v-card>
             </v-dialog>
-            <v-btn>
+            <v-btn color="grey darken-3">
               <v-icon>mdi-delete</v-icon>
               Reject 
             </v-btn>
