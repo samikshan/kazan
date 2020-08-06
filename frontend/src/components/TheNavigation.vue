@@ -71,6 +71,7 @@ export default class Nav extends Vue {
       try {
         await users.getLoggedInUser();
         await users.setupUserBuckets();
+        await users.loadUserFeed();
       } catch (e) {
         console.error(e);
       }

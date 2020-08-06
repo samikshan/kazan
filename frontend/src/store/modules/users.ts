@@ -14,6 +14,9 @@ import {
   RecordedTrack,
   UserTrackIndex,
   StoreTrackMetadata,
+  Instrument,
+  TracksByInstrument,
+  UserFeed,
 } from "@/store/models";
 import {
   createUser,
@@ -23,7 +26,8 @@ import {
   uploadTrackToBucket,
   storeTrackFn,
   updateUserFn,
-  getUserFn
+  getUserFn,
+  getUserFeedFn
 } from "@/store/api";
 import { HedgehogIdentity } from "@/store/hedgehogIdentity";
 import { TextileIdentity } from "@/store/textileidentity";
@@ -38,12 +42,14 @@ import { Buckets } from "@textile/hub";
 })
 class UsersModule extends VuexModule {
   user: User | null = null;
+  userFeed: UserFeed | null = null; 
   buckets: Buckets | null = null;
   bucketKey = "";
   trackIndex: UserTrackIndex | null = null;
   tracks: Array<TrackMetadata> = [];
+  recommendedTracks: Array<TrackMetadata> = [];
   textileIdent: TextileIdentity | null = null;
-  hedgehogIdent: HedgehogIdentity | null = null; 
+  hedgehogIdent: HedgehogIdentity | null = null;
 
   get username() {
     return (this.user && this.user.username) || null;
@@ -51,6 +57,10 @@ class UsersModule extends VuexModule {
 
   get walletAddr() {
     return (this.user && this.user.walletAddr) || null;
+  }
+
+  get isUserIdentSet() {
+    return !this.hedgehogIdent;
   }
 
   get isLoggedIn() {
@@ -66,6 +76,10 @@ class UsersModule extends VuexModule {
 
   get getTracks() {
     return this.tracks;
+  }
+
+  get getUserFeed() {
+    return this.userFeed;
   }
 
   @Mutation
@@ -243,6 +257,43 @@ class UsersModule extends VuexModule {
       this.context.commit("updateTracks", track);
     } catch (err) {
       console.error(err);
+    }
+  }
+
+  @Mutation
+  setUserFeed(userFeed: UserFeed) {
+    this.userFeed = userFeed;
+  }
+
+  @Action
+  async loadUserFeed() {
+    try {
+      if (!this.hedgehogIdent) {
+        throw new Error("Hedgehog identity not set");
+      }
+      if (!this.user) {
+        throw new Error("no logged in user")
+      }
+
+      const respData: Array<object> = await getUserFeedFn(this.hedgehogIdent);
+      const userFeed: UserFeed = {
+        tracks: []
+      }
+
+      for (let i = 0; i < respData.length; i++) {
+        const feedElem: any = respData[i];
+        userFeed.tracks = [
+          ...userFeed.tracks,
+          {
+            name: feedElem.Name,
+            tracks: feedElem.Tracks
+          }
+        ];
+      }
+
+      this.context.commit("setUserFeed", userFeed);
+    } catch (err) {
+      console.error(err)
     }
   }
 }

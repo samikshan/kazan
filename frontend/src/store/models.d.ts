@@ -19,12 +19,21 @@ export interface UserCreateResponse {
 }
 
 export interface UserUpdate {
-  displayName?: string;
+  displayName?: string;  
   instruments?: Array<string>;
 }
 
 export interface UserUpdateResponse {
   user: User;
+}
+
+export interface TracksByInstrument {
+  name: string;
+  tracks: Array<TrackMetadata>;
+}
+
+export interface UserFeed {
+  tracks: Array<TracksByInstrument>;
 }
 
 export interface BucketUploadResponse {
