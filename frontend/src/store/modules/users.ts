@@ -107,10 +107,14 @@ class UsersModule extends VuexModule {
   @Action({ commit: "setUser" })
   async getLoggedInUser() {
     try {
-      if (!this.hedgehogIdent) {
-        throw new Error("Hedgehog identity not set");
+      let identity: HedgehogIdentity | null = this.hedgehogIdent;
+      if (!identity) {
+        const wallet = hedgehog.getWallet();
+        const privKeyBuf = wallet.getPrivateKey();
+        identity = new HedgehogIdentity(privKeyBuf);
       }
-      const respData: any = await getUserFn(this.hedgehogIdent);
+      this.context.commit("setHedgehogIdent", identity);
+      const respData: any = await getUserFn(identity);
       console.log(respData);
 
       const user: User = {
