@@ -51,3 +51,14 @@ func (repo *TrackRepo) Update(t *models.Track) error {
 func (repo *TrackRepo) UpdateInstruments(t *models.Track) error {
 	return repo.db.Model(t).Association("Instruments").Append(t.Instruments).Error
 }
+
+// GetTracksByInstrument retrieves all tracks that DO NOT have the listed instruments
+func (repo *TrackRepo) GetTracksByInstrument(instrumentNames []string) ([]*models.Instrument, error) {
+	// logrus.Info(instruments)
+	var instruments []*models.Instrument
+	if err := repo.db.Not("name", instrumentNames).Preload("Tracks").Find(&instruments).Error; err != nil {
+		return nil, err
+	}
+
+	return instruments, nil
+}

@@ -56,7 +56,7 @@ func (repo *UserRepo) GetByID(id uint) (*models.User, error) {
 // GetByWalletAddr gets user by user id
 func (repo *UserRepo) GetByWalletAddr(addr string) (*models.User, error) {
 	var u models.User
-	if err := repo.db.Where(&models.User{WalletAddress: addr}).First(&u).Error; err != nil {
+	if err := repo.db.Preload("Instruments").Where(&models.User{WalletAddress: addr}).First(&u).Error; err != nil {
 		if gorm.IsRecordNotFoundError(err) {
 			return nil, nil
 		}

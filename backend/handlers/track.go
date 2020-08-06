@@ -89,3 +89,47 @@ func (h *Handler) NewTrack(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, t)
 }
+
+func (h *Handler) GetUserFeed(c echo.Context) error {
+	addr, err := walletAddrFromReq(c)
+	if err != nil {
+		log.WithError(err).Error("failed to get user id")
+		return &echo.HTTPError{
+			Code:    http.StatusForbidden,
+			Message: "Failed to validate request sender",
+		}
+	}
+
+	u, err := h.userRepo.GetByWalletAddr(addr)
+	if err != nil {
+		log.WithError(err).Error("failed to retrieve user for wallet address")
+		return &echo.HTTPError{
+			Code:    http.StatusInternalServerError,
+			Message: "Failed to validate request sender",
+		}
+	}
+
+	if u == nil {
+		log.WithError(err).WithField("walletAddress", addr).Error("no user for wallet address found")
+		return &echo.HTTPError{
+			Code:    http.StatusForbidden,
+			Message: "invalid request sender",
+		}
+	}
+
+	instruments := make([]string, 0)
+	for _, instrument := range u.Instruments {
+		instruments = append(instruments, instrument.Name)
+	}
+
+	tracksFiltered, err := h.trackRepo.GetTracksByInstrument(instruments)
+	if err != nil {
+		log.WithError(err).Error("failed to get tracks for instruments")
+		return &echo.HTTPError{
+			Code:    http.StatusInternalServerError,
+			Message: "Failed to get tracks",
+		}
+	}
+
+	return c.JSON(http.StatusOK, tracksFiltered)
+}

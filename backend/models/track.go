@@ -23,4 +23,5 @@ type TrackRepo interface {
 	GetByTrackID(id uint) (*Track, error)
 	Create(t *Track, composer *User) error
 	Update(t *Track) error
+	GetTracksByInstrument(instruments []string) ([]*Instrument, error)
 }
