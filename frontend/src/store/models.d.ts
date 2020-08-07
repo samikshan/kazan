@@ -1,6 +1,7 @@
 export interface User {
   id: number;
   username: string;
+  displayName?: string;
   walletAddr: string;
   instruments: Array<Instrument>;
 }
@@ -90,4 +91,14 @@ export interface RecordedTrack {
   instrumentTags: Set<string>;
   isPublished: boolean;
   parentTrackID?: number;
+}
+
+export interface Profile {
+  displayName: string;
+  username: string;
+  instruments: Array<string>;
+  followingCount: number;
+  followerCount: number;
+  jamCount: number;
+  trackCount: number;
 }

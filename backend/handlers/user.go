@@ -178,11 +178,13 @@ func (h *Handler) GetSender(c echo.Context) error {
 	senderGetResp := struct {
 		ID            uint   `json:"id"`
 		Username      string `json:"username"`
+		DisplayName   string `json:"displayName"`
 		WalletAddress string `json:"walletAddress"`
 	}{
 		ID:            u.ID,
 		Username:      u.Username,
 		WalletAddress: u.WalletAddress,
+		DisplayName:   u.DisplayName,
 	}
 
 	return c.JSON(http.StatusOK, senderGetResp)

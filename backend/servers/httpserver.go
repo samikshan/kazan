@@ -46,4 +46,5 @@ func (sv *HttpServer) setupRoutes() {
 	sv.E.PUT("/user/:id", sv.H.UpdateUser)
 	sv.E.GET("/feed", sv.H.GetUserFeed)
 	sv.E.POST("/tracks", sv.H.NewTrack)
+	sv.E.GET("/profiles/:id", sv.H.GetProfile)
 }

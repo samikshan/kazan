@@ -17,15 +17,23 @@
         class="py-0"
       >
         <v-list-item>
-          <v-list-item-content v-if="!username">
-            <router-link :to="{ name: 'signup' }">
+          <v-list-item-content v-if="!displayName">
+            <v-btn
+              text
+              small
+              @click="handleCreateAccount()"
+            >
               Create an account
-            </router-link>
+            </v-btn>
           </v-list-item-content>
           <v-list-item-content v-else>
-            <router-link :to="'/@' + username">
-              {{username}}
-            </router-link>
+            <v-btn
+              text
+              small
+              @click="handleOpenProfile(userID)"
+            >
+              {{ displayName }}
+            </v-btn>
           </v-list-item-content>
         </v-list-item>
 
@@ -86,8 +94,20 @@ export default class Nav extends Vue {
     return users.userBucketKey;
   }
 
-  get username() {
-    return users.username;
+  get displayName() {
+    return users.displayName;
+  }
+
+  get userID() {
+    return users.userID;
+  }
+
+  handleCreateAccount() {
+    this.$router.push({ name: "signup" });
+  }
+
+  handleOpenProfile(id: number) {
+    this.$router.push({ name: "profile", params: { id: id.toString() }});
   }
 }
 </script>
