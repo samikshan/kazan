@@ -63,6 +63,13 @@ const getFn = async (obj: any) => {
   });
 };
 
+export const getProfileFn = async (id: number) => {
+  return requestToServer({
+    url: "/profiles/" + id,
+    method: "get"
+  });
+};
+
 export const storeTrackFn = async (obj: StoreTrackMetadata, identity: Identity) => {
   const msg = "Authenticate with Kazan service";
   const msgBuf = Buffer.from(msg);
@@ -125,6 +132,8 @@ export const getUserFeedFn = async (identity: HedgehogIdentity) => {
     }
   });
 }
+
+
 
 export const updateUserFn = async (userID: number, obj: UserUpdate, identity: Identity) => {
   // const challenge = Buffer.from('Sign this string');

@@ -55,6 +55,14 @@ class UsersModule extends VuexModule {
     return (this.user && this.user.username) || null;
   }
 
+  get userID() {
+    return (this.user && this.user.id) || null;
+  }
+
+  get displayName() {
+    return (this.user && this.user.displayName) || null;
+  }
+
   get walletAddr() {
     return (this.user && this.user.walletAddr) || null;
   }
@@ -133,6 +141,7 @@ class UsersModule extends VuexModule {
 
       const user: User = {
         id: respData.id,
+        displayName: respData.displayName,
         username: respData.username,
         walletAddr: respData.walletAddress,
         instruments: []

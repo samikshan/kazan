@@ -103,7 +103,7 @@ const routes: Array<RouteConfig> = [
   },
   
   {
-    path: '/@:username',
+    path: '/:id',
     name: 'profile',
     component: () => import('@/views/Profile.vue'),
   },
