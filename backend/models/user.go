@@ -6,11 +6,11 @@ import (
 
 type User struct {
 	gorm.Model
-	Username      string `gorm:"unique;not null"`
-	DisplayName   string
+	Username      string       `gorm:"unique;not null"`
 	WalletAddress string       `gorm:"unique;not null"`
 	Tracks        []Track      `gorm:"foreignkey:ComposerID"`
 	Instruments   []Instrument `gorm:"many2many:users_instruments"`
+	DisplayName   string
 }
 
 type UserRepo interface {

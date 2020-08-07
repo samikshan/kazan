@@ -183,8 +183,8 @@ func (h *Handler) GetSender(c echo.Context) error {
 	}{
 		ID:            u.ID,
 		Username:      u.Username,
-		WalletAddress: u.WalletAddress,
 		DisplayName:   u.DisplayName,
+		WalletAddress: u.WalletAddress,
 	}
 
 	return c.JSON(http.StatusOK, senderGetResp)
@@ -304,9 +304,11 @@ func (h *Handler) UpdateUser(c echo.Context) error {
 
 	updateUserResp := struct {
 		Username      string `json:"username"`
+		DisplayName   string `json:"displayName"`
 		WalletAddress string `json:"walletAddress"`
 	}{
-		Username:      u.DisplayName,
+		DisplayName:   u.DisplayName,
+		Username:      u.Username,
 		WalletAddress: u.WalletAddress,
 	}
 

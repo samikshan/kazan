@@ -166,6 +166,7 @@ class UsersModule extends VuexModule {
       
       const user: User = {
         id: respData.id,
+        displayName: respData.displayName,
         username: respData.username,
         walletAddr: respData.walletAddr,
         instruments: []
