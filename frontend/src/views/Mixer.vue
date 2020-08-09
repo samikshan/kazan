@@ -52,17 +52,15 @@ import users from "@/store/modules/users";
   }
 })
 export default class Mixer extends Vue {
-  audioCtx: AudioContext = new AudioContext();
+  audioCtx: AudioContext = new AudioContext({
+    latencyHint: 0
+  });
   mediaStreamSrc!: MediaStreamAudioSourceNode;
   mediaElemSrc!: MediaElementAudioSourceNode;
   mixedAudio!: MediaStreamAudioDestinationNode;
-  merger!: ChannelMergerNode;
-  splitter!: ChannelSplitterNode;
   parentAudioElem!: HTMLMediaElement;
-  channel1 = [0,1];
-  channel2 = [1, 0];
 
-  readyToMix = false;
+readyToMix = false;
   isMixing = false;
   chunks: Array<any> = []
   mediaRecorder!: MediaRecorder;
@@ -75,7 +73,6 @@ export default class Mixer extends Vue {
   }
 
   async created() {
-    // let stream = null;
     try {
       this.parentAudioElem = new Audio(this.parentAudioSrc);
       this.parentAudioElem.crossOrigin = "anonymous";
@@ -83,18 +80,10 @@ export default class Mixer extends Vue {
         this.readyToMix = true
       });
 
-      this.merger = this.audioCtx.createChannelMerger(2);
-      this.splitter = this.audioCtx.createChannelSplitter(2);
       this.mixedAudio = this.audioCtx.createMediaStreamDestination();
       this.mediaElemSrc = this.audioCtx.createMediaElementSource(this.parentAudioElem);
-      this.mediaElemSrc.connect(this.splitter);
-      console.log("media element source connected to splitter");
-      this.splitter.connect(this.merger, this.channel1[0], this.channel1[1]);
-
-      console.log("media element source connected to merger");
-
-      this.merger.connect(this.mixedAudio);
-      this.merger.connect(this.audioCtx.destination);
+      this.mediaElemSrc.connect(this.audioCtx.destination);
+      this.mediaElemSrc.connect(this.mixedAudio);
     } catch(err) {
       console.error(err);
     }
@@ -119,10 +108,8 @@ export default class Mixer extends Vue {
       });
 
       this.mediaStreamSrc = this.audioCtx.createMediaStreamSource(stream);
-      this.mediaStreamSrc.connect(this.splitter);
-      console.log("stream source connected to splitter");
-      this.splitter.connect(this.merger, this.channel2[0], this.channel2[1]);
-      console.log("stream source connected to merger");
+      this.mediaStreamSrc.connect(this.mixedAudio);
+      this.mediaStreamSrc.connect(this.audioCtx.destination);
       this.parentAudioElem.play();
 
       /* use the stream */
@@ -141,7 +128,7 @@ export default class Mixer extends Vue {
     console.log("stopped mixing");
     this.isMixing = false;
     this.mediaRecorder.stop();
-    this.mediaStreamSrc.disconnect(this.splitter);
+    this.mediaStreamSrc.disconnect(this.audioCtx.destination);
   }
 
   handleMediaRecorderStop() {

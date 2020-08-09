@@ -43,48 +43,67 @@ import users from "@/store/modules/users";
   }
 })
 export default class Recorder extends Vue {
+  audioCtx: AudioContext = new AudioContext({
+    latencyHint: 0
+  });
+  mediaStreamSrc!: MediaStreamAudioSourceNode;
+  recordedAudio!: MediaStreamAudioDestinationNode;
   isRecording = false;
   recordings: Array<RecordedTrack> = [];
   mediaRecorder!: MediaRecorder;
   chunks: Array<any> = [];
 
   async mounted() {
-    let stream = null;
     try {
-      stream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-        video: false
-      });
-      /* use the stream */
-      this.mediaRecorder = new MediaRecorder(stream, {
-        mimeType: "audio/webm"
-      });
-      this.mediaRecorder.ondataavailable = event =>
-        this.chunks.push(event.data);
-      this.mediaRecorder.onstop = event => this.handleMediaRecorderStop(event);
+      console.log(this.audioCtx.baseLatency);
+      this.recordedAudio = this.audioCtx.createMediaStreamDestination();
     } catch (err) {
       /* handle the error */
       console.log("The following error occurred: " + err);
     }
   }
 
-  handleStartRecording(event: Event) {
-    console.log(this.mediaRecorder);
+  async handleStartRecording(event: Event) {
+    console.log("started recording");
     this.isRecording = true;
-    this.mediaRecorder.start();
-    console.log(this.mediaRecorder.state);
-    console.log("recording started");
+    let stream = null;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: false
+      });
+
+      this.mediaStreamSrc = this.audioCtx.createMediaStreamSource(stream);
+      this.mediaStreamSrc.connect(this.audioCtx.destination);
+
+      /* use the stream */
+      this.mediaRecorder = new MediaRecorder(this.recordedAudio.stream);
+      this.mediaRecorder.start(1);
+      this.mediaRecorder.ondataavailable = event =>
+        this.chunks.push(event.data);
+
+      this.mediaRecorder.onstop = () => this.handleMediaRecorderStop();
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  stopRecording() {
+    console.log("stopped recording");
+    this.isRecording = false;
+    this.mediaRecorder.stop();
   }
 
   handleStopRecording(event: Event) {
     console.log(this.mediaRecorder.state);
     this.isRecording = false;
     this.mediaRecorder.stop();
+    this.mediaStreamSrc.disconnect(this.audioCtx.destination);
     console.log(this.mediaRecorder.state);
     console.log("recording stopped");
   }
 
-  handleMediaRecorderStop(event: Event) {
+  handleMediaRecorderStop() {
     console.log("data available after MediaRecorder.stop() called.");
     let clipName = prompt("Enter a name for your sound clip");
     if (!clipName) {
